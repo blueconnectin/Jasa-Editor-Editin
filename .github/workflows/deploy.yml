@@ -35,8 +35,8 @@ jobs:
       - name: Prepare Google authentication
         env:
           CLASPRC_JSON: ${{ secrets.CLASPRC_JSON }}
-          SCRIPT_ID: ${{ vars.APPS_SCRIPT_ID }}
-          DEPLOYMENT_ID: ${{ vars.APPS_SCRIPT_DEPLOYMENT_ID }}
+          SCRIPT_ID: ${{ vars.APPS_SCRIPT_ID || '10lnNjlhP9knjgxCjaK17SBipKHa1iiquxBB7cLmWgI836Nfht_pOYPuW' }}
+          DEPLOYMENT_ID: ${{ vars.APPS_SCRIPT_DEPLOYMENT_ID || 'AKfycbz1XTQbklRbBbeBNmkNwiKGmE1n2dYOpKbRHB35unZkk2Mu5pY9AIZZuBuAWOGKmncA' }}
         run: |
           node <<'JS'
           const fs = require('fs');
@@ -54,7 +54,7 @@ jobs:
         run: npm install --global @google/clasp@2.4.2
       - name: Push source and update existing deployment
         env:
-          DEPLOYMENT_ID: ${{ vars.APPS_SCRIPT_DEPLOYMENT_ID }}
+          DEPLOYMENT_ID: ${{ vars.APPS_SCRIPT_DEPLOYMENT_ID || 'AKfycbz1XTQbklRbBbeBNmkNwiKGmE1n2dYOpKbRHB35unZkk2Mu5pY9AIZZuBuAWOGKmncA' }}
         run: |
           clasp push --force
           clasp deploy --deploymentId "$DEPLOYMENT_ID" --description "GitHub ${GITHUB_SHA}"
