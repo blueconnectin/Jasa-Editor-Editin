@@ -1,0 +1,315 @@
+<!doctype html>
+<html lang="id">
+<head>
+<base target="_top">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style>
+:root{color-scheme:light;--paper:#f4f7f4;--white:#fff;--ink:#18342e;--muted:#4c655c;--line:#d5e0da;--green:#195c48;--amber:#794c14}
+*{box-sizing:border-box}
+body{margin:0;background:var(--paper);color:var(--ink);font:15px system-ui,sans-serif}
+main{max-width:1270px;margin:auto;padding:30px clamp(14px,4vw,42px)}
+h1{margin:0;font-size:clamp(27px,4vw,40px);letter-spacing:-.04em}
+h2{margin:0;font-size:18px}
+p{margin:6px 0;color:var(--muted)}
+header,.tools,.actions,summary{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}
+header{margin-bottom:22px}
+button,input,select,textarea{font:inherit}
+button{cursor:pointer;background:white;color:var(--ink);border:1px solid var(--line);border-radius:8px;padding:9px 13px;font-weight:650}
+button:disabled{opacity:.55;cursor:wait}
+.primary{background:var(--green);color:white;border-color:var(--green)}
+[hidden]{display:none!important}
+label{display:grid;gap:5px;font-size:13px;font-weight:650}
+input,select,textarea{min-width:0;width:100%;padding:8px 10px;border:1px solid #b9cbc1;border-radius:7px;background:white;color:var(--ink)}
+:focus-visible{outline:3px solid #3d977e;outline-offset:2px}
+.tools{justify-content:flex-start;align-items:end;margin-bottom:14px}
+.tools label{flex:0 1 170px}.tools .search{flex:1 1 210px}
+.cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:10px;margin-bottom:14px}
+.card,.panel,details{background:white;border:1px solid var(--line);border-radius:12px}
+.card{padding:15px}.card small{color:var(--muted)}.card strong{display:block;margin-top:7px;font-size:21px;font-variant-numeric:tabular-nums}
+.card:last-child{background:#e6f2eb}
+.panel{padding:15px;margin-top:12px}.panel h2{margin-bottom:10px}
+.scroll{overflow:auto}
+table{width:100%;border-collapse:collapse;text-align:left}
+th,td{padding:9px;border-bottom:1px solid #e5ece7;vertical-align:top}
+th{font-size:12px;color:var(--muted);white-space:nowrap}
+td.money{white-space:nowrap;font-variant-numeric:tabular-nums}
+td.service{min-width:175px}
+td small{display:block;color:var(--muted);margin-top:4px}
+td .warning,.warning{color:var(--amber)}
+details{margin-top:10px;padding:12px 15px}
+summary{display:list-item;cursor:pointer;font-weight:650}
+.breakdown{display:grid;grid-template-columns:repeat(auto-fit,minmax(235px,1fr));gap:18px;margin-top:10px}
+.cost{display:flex;align-items:end;gap:8px;flex-wrap:wrap;margin-top:10px}
+.cost input{max-width:160px}
+dialog{border:1px solid var(--line);border-radius:14px;width:min(600px,calc(100vw - 24px));max-height:calc(100dvh - 24px);color:var(--ink);padding:20px}
+dialog::backdrop{background:#142a24a8}
+.fields{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;margin:15px 0}.wide{grid-column:1/-1}
+.actions{justify-content:flex-end;margin-top:12px}.archive{margin-right:auto;color:#913725}
+.msg{min-height:22px;margin:8px 0;color:var(--green)}.error{color:#9f2e23}
+@media(max-width:520px){.cards{grid-template-columns:1fr 1fr}.card strong{font-size:17px}}
+
+button,input,select,textarea{min-height:44px}
+main,.panel,.breakdown>div{min-width:0}
+.scroll{max-width:100%;-webkit-overflow-scrolling:touch}
+.scroll table{min-width:720px}
+dialog{max-height:calc(100dvh - 24px);overflow-y:auto}
+@media(max-width:600px){
+  main{padding:14px}
+  header>div,header>button{width:100%}
+  .tools{display:grid;grid-template-columns:minmax(0,1fr);gap:12px}
+  input,select,textarea{font-size:16px}
+  .cards{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .card{min-width:0;padding:12px}
+  .card strong{font-size:17px;overflow-wrap:anywhere}
+  .breakdown,.fields{grid-template-columns:minmax(0,1fr)}
+  .wide{grid-column:auto}
+  .actions{display:grid;grid-template-columns:repeat(2,minmax(0,1fr))}
+  .actions .archive{grid-column:1/-1;margin:0}
+}
+</style>
+</head>
+<body>
+<main>
+<header><div><h1>Pendapatan Editor</h1><p id="subtitle">Rekap transaksi dan fee bulanan</p></div><button class="primary" id="add" disabled>+ Transaksi</button></header>
+<div class="tools">
+<label>Periode <input type="month" id="period" min="2000-01" max="2099-12"></label>
+<label class="search">Cari <input id="query" type="search" placeholder="Nama editor, jasa, atau metode bayar"></label>
+<label>Status bayar <select id="filter"><option value="">Semua status</option><option>Lunas</option><option>Belum bayar</option><option>Belum diketahui</option><option value="review">Perlu ditinjau</option></select></label>
+<button id="reload">Muat ulang</button>
+</div>
+<div id="message" class="msg" role="status">Memuat transaksi…</div>
+<div class="cards" id="cards"></div>
+<details><summary>Rekap pegawai dan hasil usaha</summary>
+<div class="breakdown">
+<div><h2>Nama pegawai dan fee total</h2><table><tbody id="editors"></tbody></table></div>
+<div><h2>Alokasi hasil usaha</h2><p id="allocation-note"></p><table><tbody id="allocation"></tbody></table></div>
+</div>
+<form class="cost" id="costForm" hidden><label>Biaya operasional lain (Rp)<input id="cost" type="number" min="0" max="1000000000000" step="0.01" required disabled></label><button id="saveCost" disabled>Simpan biaya</button></form>
+</details>
+<section class="panel"><h2 id="tableTitle">Transaksi</h2><div class="scroll"><table>
+<thead><tr><th>Tanggal</th><th>Nama editor</th><th>Jasa</th><th>Harga</th><th>Biaya jasa</th><th>Pembayaran</th><th>Aksi</th></tr></thead>
+<tbody id="records"></tbody></table></div><p id="empty" hidden>Belum ada transaksi untuk filter ini.</p></section>
+</main>
+<dialog id="dialog">
+<form id="transaction">
+<h2 id="formTitle">Tambah transaksi</h2><p id="issue" class="warning"></p>
+<div class="fields">
+<label>Tanggal <input name="date" type="date" min="2000-01-01" max="2099-12-31" required></label>
+<label>Nama editor <select name="editor" id="editorSelect" required><option value="">Pilih editor</option></select></label>
+<label class="wide">Jasa <input name="service" list="services" maxlength="500" required></label>
+<label>Harga (Rp) <input name="price" type="number" min="0" max="1000000000000" step="0.01" required></label>
+<label>Biaya jasa (%) <select name="rate" required><option value="">Pilih tarif</option><option value="60">60%</option><option value="70">70%</option><option value="80">80%</option></select></label>
+<label>Metode bayar <input name="method" list="methods" maxlength="150" placeholder="Contoh BCA"></label>
+<label hidden>Status bayar <select name="status"><option>Belum diketahui</option><option>Belum bayar</option><option>Lunas</option></select></label>
+<label class="wide" hidden>Catatan <textarea name="note" rows="2" maxlength="2000"></textarea></label>
+</div>
+<p id="estimate"></p><p id="formError" class="error" role="alert"></p>
+<div class="actions"><button class="archive" type="button" id="archive">Arsipkan</button><button type="button" id="cancel">Batal</button><button class="primary" id="save">Simpan transaksi</button></div>
+</form>
+</dialog>
+<datalist id="editorNames"></datalist><datalist id="services"></datalist><datalist id="methods"></datalist>
+<script>
+const $ = id => document.getElementById(id);
+const form = $('transaction');
+let data;
+let editing;
+let requestId;
+let busy = false;
+const rupiah = new Intl.NumberFormat('id-ID',{style:'currency',currency:'IDR',minimumFractionDigits:0,maximumFractionDigits:2});
+const money = value => rupiah.format(value);
+const round = value => Math.round((value + Number.EPSILON) * 100) / 100;
+const fee = record => record.rate ? round(Number(record.price) * record.rate / 100) : null;
+const periodValid = () => /^20\d\d-(0[1-9]|1[0-2])$/.test($('period').value);
+const rpc = (method, ...args) => new Promise((resolve,reject) => {
+  google.script.run.withSuccessHandler(resolve).withFailureHandler(reject)[method](...args);
+});
+function node(tag, text, className) {
+  const element = document.createElement(tag);
+  if (text !== undefined) element.textContent = text;
+  if (className) element.className = className;
+  return element;
+}
+function message(text, error = false) {
+  $('message').textContent = text;
+  $('message').classList.toggle('error', error);
+}
+function updateChoices(id, field) {
+  if (field === 'editor') {
+    const select = $('editorSelect');
+    const selected = select.value;
+    const names = [...new Set([
+      ...(data.editors || []), ...data.records.map(record => record.editor)
+    ].map(name => String(name || '').trim()).filter(Boolean))]
+      .sort((a,b) => a.localeCompare(b,'id'));
+    const placeholder = Object.assign(node('option','Pilih editor'),{value:''});
+    select.replaceChildren(placeholder, ...names.map(name =>
+      Object.assign(node('option',name),{value:name})
+    ));
+    select.value = selected;
+    return;
+  }
+  const values = [...new Set(data.records.map(record => record[field]).filter(Boolean))]
+    .sort((a,b) => String(a).localeCompare(String(b),'id'));
+  $(id).replaceChildren(...values.map(value => Object.assign(node('option'),{value})));
+}
+async function load(notice = '') {
+  $('reload').disabled = true;
+  $('saveCost').disabled = true;
+  try {
+    data = await rpc('readApp');
+    if (!periodValid()) {
+      $('period').value = data.records.map(r => r.period).filter(Boolean).sort().pop() || data.today.slice(0,7);
+    }
+    updateChoices('editorNames','editor');
+    updateChoices('services','service');
+    updateChoices('methods','method');
+    $('add').disabled = false;
+    render(true);
+    if (notice) message(notice);
+  } catch (error) {
+    message((notice ? notice + ' ' : '') + (error.message || String(error)), true);
+  } finally {
+    $('reload').disabled = false;
+  }
+}
+function addAmounts(target, items) {
+  target.replaceChildren(...items.map(([label,value]) => {
+    const row = node('tr');
+    row.append(node('td',label),node('td',money(value),'money'));
+    return row;
+  }));
+}
+function render(resetCost = false) {
+  if (!data) return;
+  const period = $('period').value;
+  const monthRows = data.records.filter(r => r.period === period);
+  const unknownRate = monthRows.filter(r => !r.rate).length;
+  const review = monthRows.filter(r => r.issue).length;
+  const sum = (list, extract) => round(list.reduce((total,r) => total + (extract(r) || 0),0));
+  const revenue = sum(monthRows,r => r.price);
+  const paid = sum(monthRows.filter(r => r.status === 'Lunas'),r => r.price);
+  const due = sum(monthRows.filter(r => r.status === 'Belum bayar'),r => r.price);
+  const unknownPayment = sum(monthRows.filter(r => r.status === 'Belum diketahui'),r => r.price);
+  const totalFee = sum(monthRows,fee);
+  const cost = 0;
+  const profit = round(revenue - totalFee - cost);
+  const cards = [['Total omzet',revenue],['Fee total',totalFee],['Operasional',round(totalFee + cost)],['Sisa hasil usaha',profit]];
+  $('cards').replaceChildren(...cards.map(([label,value]) => {
+    const card = node('div',undefined,'card');
+    card.append(node('small',label),node('strong',money(value)));
+    return card;
+  }));
+  message(review ? review + ' transaksi perlu ditinjau.' + (unknownRate ? ' Fee dengan tarif kosong belum masuk total.' : '') : '');
+  const byEditor = new Map();
+  for (const r of monthRows) byEditor.set(r.editor,round((byEditor.get(r.editor) || 0) + (fee(r) || 0)));
+  addAmounts($('editors'),[...byEditor].sort(([a],[b]) => a.localeCompare(b,'id')));
+  const basis = Math.max(profit,0);
+  const allocations = [['Investasi (3%)',3],['Dana darurat (3%)',3],['Iklan (10%)',10],['Infaq (2%)',2]]
+    .map(([name,percent]) => [name,round(basis * percent / 100)]);
+  const share = round(basis - allocations.reduce((total,item) => total + item[1],0));
+  const members = [['Mumu (41%)',41],['Hilmi (10%)',10]]
+    .map(([name,percent]) => [name,round(basis * percent / 100)]);
+  members.push(['Gina (31%)',round(share - members.reduce((total,item) => total + item[1],0))]);
+  addAmounts($('allocation'),[...allocations,['Bagi hasil',share],...members]);
+  $('allocation-note').textContent = 'Persentase dihitung dari sisa hasil usaha positif.';
+  $('cost').disabled = !periodValid();
+  $('saveCost').disabled = !periodValid();
+  if (resetCost) $('cost').value = cost;
+  const query = $('query').value.trim().toLocaleLowerCase('id');
+  const filter = $('filter').value;
+  const view = monthRows.filter(r => (!filter || (filter === 'review' ? r.issue : r.status === filter)) &&
+    [r.editor,r.service,r.method].join(' ').toLocaleLowerCase('id').includes(query));
+  view.sort((a,b) => String(b.date).localeCompare(String(a.date)));
+  $('tableTitle').textContent = 'Transaksi (' + view.length + ')';
+  $('empty').hidden = view.length > 0;
+  $('records').replaceChildren(...view.map(r => {
+    const row = node('tr');
+    const date = node('td',r.date ? r.date.split('-').reverse().join('/') : 'Perlu tanggal');
+    if (r.issue) date.append(node('small','Tinjau · Excel ' + r.source,'warning'));
+    const service = node('td',r.service,'service');
+    if (r.note) service.append(node('small',r.note));
+    const payment = node('td',r.status);
+    if (r.method) payment.append(node('small',r.method));
+    const change = node('button','Edit');
+    change.onclick = () => openForm(r);
+    const action = node('td');
+    action.append(change);
+    const commission = fee(r);
+    row.append(date,node('td',r.editor),service,node('td',money(r.price),'money'),
+      node('td',commission === null ? 'Perlu tarif' : money(commission) + ' · ' + r.rate + '%','money'),payment,action);
+    return row;
+  }));
+}
+function openForm(record) {
+  editing = record;
+  requestId = record ? '' : crypto.randomUUID();
+  form.reset();
+  const fields = form.elements;
+  fields.date.value = record ? record.date :
+    $('period').value === data.today.slice(0,7) || !periodValid() ? data.today : $('period').value + '-01';
+  if (record) {
+    for (const name of ['editor','service','price','rate','method','status','note']) fields[name].value = record[name];
+  }
+  $('formTitle').textContent = record ? 'Edit transaksi' : 'Tambah transaksi';
+  $('archive').hidden = !record;
+  $('issue').textContent = record && record.issue ? record.issue + ' · Baris Excel ' + record.source : '';
+  $('formError').textContent = '';
+  updateEstimate();
+  $('dialog').showModal();
+}
+function updateEstimate() {
+  const value = fee({price:form.elements.price.value,rate:form.elements.rate.value});
+  $('estimate').textContent = value === null ? '' : 'Biaya jasa ' + money(value);
+}
+async function mutate(action, notice, newPeriod) {
+  if (busy) return;
+  busy = true;
+  for (const button of [$('save'),$('archive'),$('cancel')]) button.disabled = true;
+  $('formError').textContent = '';
+  try {
+    await action();
+    $('dialog').close();
+    if (newPeriod) $('period').value = newPeriod;
+    await load(notice);
+  } catch(error) {
+    $('formError').textContent = error.message || String(error);
+  } finally {
+    busy = false;
+    for (const button of [$('save'),$('archive'),$('cancel')]) button.disabled = false;
+  }
+}
+form.oninput = updateEstimate;
+form.onsubmit = event => {
+  event.preventDefault();
+  const fields = Object.fromEntries(new FormData(form));
+  mutate(() => rpc('saveTransaction',{...fields,id:editing?.id || "",version:editing?.version || "",requestId}),
+    'Transaksi tersimpan.', fields.date.slice(0,7));
+};
+$('archive').onclick = () => {
+  if (editing && confirm('Arsipkan transaksi ini? Transaksi akan dikeluarkan dari rekap.')) {
+    mutate(() => rpc('archiveTransaction',editing.id,editing.version),'Transaksi diarsipkan.');
+  }
+};
+$('cancel').onclick = () => $('dialog').close();
+$('dialog').addEventListener('cancel',event => { if (busy) event.preventDefault(); });
+$('costForm').onsubmit = async event => {
+  event.preventDefault();
+  $('saveCost').disabled = true;
+  try {
+    await rpc('saveCosts',$('period').value,$('cost').value);
+    await load('Biaya tersimpan.');
+  } catch (error) {
+    message(error.message || String(error),true);
+    $('saveCost').disabled = false;
+  }
+};
+$('add').onclick = () => openForm();
+$('reload').onclick = () => load();
+$('period').oninput = () => render(true);
+$('query').oninput = () => render();
+$('filter').onchange = () => render();
+load();
+</script>
+</body>
+</html>
