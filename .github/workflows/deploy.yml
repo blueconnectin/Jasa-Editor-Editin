@@ -1,0 +1,64 @@
+name: Deploy Apps Script
+on:
+  push:
+    branches: [main]
+    paths:
+      - Code.gs
+      - Index.html
+      - appsscript.json
+      - .claspignore
+      - .github/workflows/deploy.yml
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: apps-script-production
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    environment: production
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - name: Validate JavaScript and configuration
+        run: |
+          node --check < Code.gs
+          node -e "JSON.parse(require('fs').readFileSync('appsscript.json','utf8'))"
+          sed -n '/^<script>$/,/^<\/script>$/p' Index.html | sed '1d;$d' | node --check
+      - name: Prepare Google authentication
+        env:
+          CLASPRC_JSON: ${{ secrets.CLASPRC_JSON }}
+          SCRIPT_ID: ${{ vars.APPS_SCRIPT_ID }}
+          DEPLOYMENT_ID: ${{ vars.APPS_SCRIPT_DEPLOYMENT_ID }}
+        run: |
+          node <<'JS'
+          const fs = require('fs');
+          const path = require('path');
+          const os = require('os');
+          for (const key of ['CLASPRC_JSON','SCRIPT_ID','DEPLOYMENT_ID']) {
+            if (!process.env[key]) throw new Error('Konfigurasi belum diisi: ' + key);
+          }
+          const auth = JSON.parse(process.env.CLASPRC_JSON);
+          if (!auth.token?.refresh_token) throw new Error('Kredensial clasp memerlukan refresh_token.');
+          fs.writeFileSync(path.join(os.homedir(),'.clasprc.json'), JSON.stringify(auth), {mode:0o600});
+          fs.writeFileSync('.clasp.json', JSON.stringify({scriptId:process.env.SCRIPT_ID,rootDir:'.'}));
+          JS
+      - name: Install clasp
+        run: npm install --global @google/clasp@2.4.2
+      - name: Push source and update existing deployment
+        env:
+          DEPLOYMENT_ID: ${{ vars.APPS_SCRIPT_DEPLOYMENT_ID }}
+        run: |
+          clasp push --force
+          clasp deploy --deploymentId "$DEPLOYMENT_ID" --description "GitHub ${GITHUB_SHA}"
+      - name: Remove temporary credentials
+        if: always()
+        run: |
+          rm -f "$HOME/.clasprc.json" .clasp.json
