@@ -14,9 +14,9 @@ infaq 2%, Mumu 41%, Hilmi 10%, dan Gina 31%. Gina menyerap selisih pembulatan.
 ## Hubungkan ke proyek yang sudah digunakan
 
 1. Di GitHub buka Settings > Secrets and variables > Actions.
-2. Pada Variables tambahkan APPS_SCRIPT_ID dari Apps Script > Project Settings.
-3. Tambahkan APPS_SCRIPT_DEPLOYMENT_ID dari Deploy > Manage deployments.
-   Gunakan deployment Web app yang sudah ada agar URL tetap sama.
+2. Script ID dan Deployment ID aplikasi sudah diisi pada workflow.
+3. Jika berpindah proyek, Variables APPS_SCRIPT_ID dan APPS_SCRIPT_DEPLOYMENT_ID
+   dapat diisi untuk mengganti tujuan deploy.
 4. Aktifkan Google Apps Script API di https://script.google.com/home/usersettings.
 5. Di komputer pribadi yang memiliki Node.js, jalankan perintah berikut.
 
