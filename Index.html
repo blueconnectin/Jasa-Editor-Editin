@@ -400,6 +400,21 @@ label.service-option{display:flex;align-items:center;gap:10px;font-size:15px;col
 .other-service{margin-top:12px}
 @media(max-width:480px){.service-choices{grid-template-columns:minmax(0,1fr)}}
 
+
+#paymentBalanceSection{margin:0 0 30px}
+body[data-view="withdrawals"] #paymentBalanceSection{display:none}
+#paymentBalanceSection .section-heading h2{font-size:21px}
+#paymentBalanceSection .section-heading>span{font-size:14px;color:#425672}
+.payment-balance-context{font-size:14px;margin:0 0 16px;color:#425672}
+.payment-balances{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px}
+.payment-balance-card{border:1px solid #c8d5e8;background:#fff;border-radius:13px;padding:22px}
+.payment-balance-card h3{margin:0 0 16px;font-size:20px}
+.payment-balance-label{display:block;font-size:14px;color:#425672}
+.payment-balance-value{display:block;font-size:30px;font-weight:700;margin:5px 0 20px;overflow-wrap:anywhere}
+.payment-balance-row{display:flex;justify-content:space-between;gap:12px;margin:9px 0;font-size:15px;color:#354b69}
+#paymentBalanceWarning{font-size:14px;margin:16px 0}
+#history td:last-child button{margin:3px}
+@media(max-width:600px){.payment-balances{grid-template-columns:minmax(0,1fr)}.payment-balance-card{padding:18px}.payment-balance-value{font-size:27px}}
 </style>
 </head>
 <body data-view="overview">
@@ -467,7 +482,13 @@ label.service-option{display:flex;align-items:center;gap:10px;font-size:15px;col
     <button id="withdraw" class="primary" disabled>Catat pengambilan</button>
   </div>
   <p class="wallet-notice">Saldo mengikuti seluruh transaksi tercatat, termasuk pembayaran yang statusnya belum diketahui. Koreksi transaksi akan memperbarui saldo.</p>
-  <div id="balanceGroupHeader"><p id="walletGroupCaption"></p></div>
+  <section id="paymentBalanceSection">
+<div class="section-heading"><h2>Saldo per metode bayar</h2><span>Seluruh periode</span></div>
+<p class="payment-balance-context">Pemasukan transaksi dikurangi pengambilan dari sumber dana yang sama.</p>
+<div id="paymentBalances" class="payment-balances"></div>
+<p id="paymentBalanceWarning" class="warning" hidden></p>
+</section>
+<div id="balanceGroupHeader"><p id="walletGroupCaption"></p></div>
   <div class="wallet-overview" id="walletOverview"></div>
   <div class="tools" id="walletFilters">
     <div class="balance-tabs" role="group" aria-label="Jenis saldo">
@@ -487,7 +508,7 @@ label.service-option{display:flex;align-items:center;gap:10px;font-size:15px;col
       <label>Status<select id="historyStatus"><option value="">Semua status</option><option value="active">Aktif</option><option value="cancelled">Dibatalkan</option></select></label>
     </div>
     <div class="scroll"><table>
-      <thead><tr><th>Tanggal</th><th>Akun</th><th>Jumlah</th><th>Keterangan</th><th>Status</th><th>Aksi</th></tr></thead>
+      <thead><tr><th>Tanggal</th><th>Akun</th><th>Sumber dana</th><th>Jumlah</th><th>Keterangan</th><th>Status</th><th>Aksi</th></tr></thead>
       <tbody id="history"></tbody>
     </table></div>
     <p id="historyEmpty" hidden>Belum ada pengambilan untuk filter ini.</p>
@@ -498,6 +519,7 @@ label.service-option{display:flex;align-items:center;gap:10px;font-size:15px;col
     <h2>Catat pengambilan</h2>
     <div class="fields">
       <label class="wide">Saldo yang digunakan<select name="account" id="withdrawAccount" required></select></label>
+<label class="wide">Sumber dana<select name="method" id="withdrawMethod" required><option value="">Pilih sumber dana</option><option>Shopeepay</option><option>BCA</option></select></label>
       <label>Tanggal<input name="date" id="withdrawDate" type="date" min="2000-01-01" required></label>
       <label>Jumlah (Rp)<input name="amount" id="withdrawAmount" type="number" min="0.01" max="1000000000000" step="0.01" required></label>
       <label class="wide">Keterangan<textarea name="note" rows="3" maxlength="1000" placeholder="Tujuan atau rincian pengambilan" required></textarea></label>
@@ -517,6 +539,14 @@ label.service-option{display:flex;align-items:center;gap:10px;font-size:15px;col
   </form>
 </dialog>
 
+<dialog id="methodAssignDialog">
+<form id="methodAssignForm">
+<h2>Lengkapi sumber dana</h2><p id="methodAssignInfo"></p>
+<label>Sumber dana<select id="methodAssignValue" required><option value="">Pilih sumber dana</option><option>Shopeepay</option><option>BCA</option></select></label>
+<p id="methodAssignError" class="error" role="alert"></p>
+<div class="actions"><button id="methodAssignCancel" type="button">Batal</button><button id="methodAssignSave" class="primary">Simpan sumber dana</button></div>
+</form>
+</dialog>
 </main>
 <dialog id="dialog">
 <form id="transaction">
@@ -880,6 +910,7 @@ function renderWallets() {
   if (!accounts.length) {
     $('wallets').replaceChildren(node('p','Tidak ada akun untuk pencarian ini.','balance-empty'));
   }
+  renderPaymentBalances();
   renderHistory();
   updatePageHeading();
 }
@@ -919,9 +950,15 @@ function renderHistory() {
       const button = node('button','Batalkan');
       button.onclick = () => openCancellation(entry);
       action.append(button);
+      if (!entry.method) {
+        const assign = node('button','Lengkapi sumber dana');
+        assign.onclick = () => openMethodAssignment(entry);
+        action.append(assign);
+      }
     }
     row.append(node('td',entry.date.split('-').reverse().join('/')),
       node('td',wallet ? accountLabel(wallet) : entry.account),
+      node('td',entry.method || 'Belum diisi'),
       node('td',money(entry.amount),'money'),description,
       node('td',entry.cancelled ? 'Dibatalkan' : 'Aktif'),action);
     return row;
@@ -931,7 +968,9 @@ function renderHistory() {
 function showAvailable() {
   const account = data.wallets.find(item => item.id === $('withdrawAccount').value);
   $('availableBalance').textContent = account ? 'Saldo tersedia ' + money(account.balance) : '';
-  $('withdrawAmount').max = account ? Math.max(account.balance,0) : 0;
+  const source = (data.paymentBalances?.accounts || []).find(item => item.method === $('withdrawMethod').value);
+  if (source) $('availableBalance').textContent += ' · Saldo ' + source.method + ' ' + money(source.balance);
+  $('withdrawAmount').max = account ? Math.max(0,Math.min(account.balance,source ? source.balance : account.balance)) : 0;
 }
 
 function openWithdrawal(accountId) {
@@ -1199,6 +1238,57 @@ function updateOtherService() {
 }
 $('serviceChoices').onchange = () => {servicesChanged = true; updateOtherService();};
 $('otherService').oninput = () => {servicesChanged = true;};
+
+function renderPaymentBalances() {
+  const recap = data.paymentBalances || {accounts:[],unknownIncome:0,unknownWithdrawn:0};
+  $('paymentBalances').replaceChildren(...recap.accounts.map(account => {
+    const card = node('article',undefined,'payment-balance-card');
+    card.append(node('h3',account.method),node('span','Saldo tercatat','payment-balance-label'));
+    const balance = node('strong',money(account.balance),'payment-balance-value');
+    if (account.balance < 0) balance.classList.add('error');
+    card.append(balance);
+    for (const [label,value] of [['Pemasukan',account.income],['Pengambilan',account.withdrawn]]) {
+      const row = node('div',undefined,'payment-balance-row');
+      row.append(node('span',label),node('strong',money(value)));
+      card.append(row);
+    }
+    return card;
+  }));
+  const warnings = [];
+  if (recap.unknownIncome) warnings.push('Transaksi dengan metode kosong atau lainnya ' + money(recap.unknownIncome) + '.');
+  if (recap.unknownWithdrawn) warnings.push('Pengambilan yang sumber dananya belum diisi ' + money(recap.unknownWithdrawn) + '. Lengkapi melalui menu Pengambilan.');
+  $('paymentBalanceWarning').textContent = warnings.join(' ');
+  $('paymentBalanceWarning').hidden = !warnings.length;
+}
+let assigningWithdrawal;
+let assignmentBusy = false;
+function openMethodAssignment(entry) {
+  assigningWithdrawal = entry.id;
+  $('methodAssignForm').reset();
+  $('methodAssignInfo').textContent = entry.date.split('-').reverse().join('/') + ' · ' + money(entry.amount) + ' · ' + entry.note;
+  $('methodAssignError').textContent = '';
+  $('methodAssignDialog').showModal();
+}
+$('methodAssignCancel').onclick = () => $('methodAssignDialog').close();
+$('methodAssignDialog').addEventListener('cancel',event => {if (assignmentBusy) event.preventDefault();});
+$('methodAssignForm').onsubmit = async event => {
+  event.preventDefault();
+  if (assignmentBusy) return;
+  assignmentBusy = true;
+  $('methodAssignSave').disabled = $('methodAssignCancel').disabled = true;
+  $('methodAssignError').textContent = '';
+  try {
+    await rpc('assignWithdrawalMethod',assigningWithdrawal,$('methodAssignValue').value);
+    $('methodAssignDialog').close();
+    await load('Sumber dana pengambilan tersimpan.');
+  } catch(error) {
+    $('methodAssignError').textContent = error.message || String(error);
+  } finally {
+    assignmentBusy = false;
+    $('methodAssignSave').disabled = $('methodAssignCancel').disabled = false;
+  }
+};
+$('withdrawMethod').onchange = showAvailable;
 
 load();
 </script>
