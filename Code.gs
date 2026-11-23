@@ -1,4 +1,4 @@
-const MIGRATION_START = '2026-03-01';
+const MIGRATION_START = '2026-01-01';
 const TX = ['ID','Periode','Tanggal','Editor','Jasa','Harga','Tarif %','Metode bayar','Status bayar','Catatan','Perlu ditinjau','Baris Excel','Versi','Diarsipkan'];
 const COST = ['Periode','Biaya lain'];
 const ZONE = 'Asia/Jakarta';
