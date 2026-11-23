@@ -116,28 +116,173 @@ dialog{box-shadow:0 24px 90px #0c25414a;border:0;border-radius:18px;padding:24px
  .wallet-section{margin-top:26px;padding-top:22px}
 }
 
+body{background:#f5f7fb;color:#1d2b42;font-family:system-ui,-apple-system,"Segoe UI",sans-serif;font-size:14px}
+.sidebar{position:fixed;inset:0 auto 0 0;width:224px;background:#101f35;color:#fff;padding:34px 18px;display:flex;flex-direction:column;z-index:10}
+.brand{padding:0 16px 30px;border-bottom:1px solid #2a374b;margin-bottom:26px}
+.brand strong{font-size:26px;letter-spacing:-1px;display:block}
+.brand span{font-size:12px;color:#a8b8ce;display:block;margin-top:5px}
+.app-nav{display:grid;gap:8px}
+.app-nav button{background:transparent;border:0;color:#adbed6;text-align:left;padding:13px 16px;font-size:14px;font-weight:550;min-height:46px}
+.app-nav button:hover:not(:disabled){background:#20334e;color:#fff}
+.app-nav button[aria-current="page"]{color:#fff;background:#3157d5;box-shadow:0 4px 16px #0002}
+.sidebar-footer{margin-top:auto;padding:20px 16px 0;color:#8ca3c1;font-size:12px;border-top:1px solid #2a374b}
+main{max-width:1600px;margin:0 auto 0 224px;padding:36px clamp(24px,3vw,52px);min-height:100vh}
+header{background:none;color:#1d2b42;padding:0 0 26px;margin:0 0 24px;border-radius:0;border-bottom:1px solid #dfe5ef;align-items:center}
+h1{font-size:30px;font-weight:700;letter-spacing:-1px;line-height:1.25}
+header p{color:#66758b;font-size:14px;margin:8px 0 0}
+header .primary{background:#3157d5;color:white;border:1px solid #3157d5;padding:11px 18px;box-shadow:0 4px 9px #3157d51a}
+#transactionTools{padding:16px 18px;background:#fff;border:1px solid #e0e6ef;border-radius:12px;margin-bottom:22px}
+#transactionTools label{flex:0 1 170px}
+#transactionTools .search{flex:1 1 220px}
+label{font-weight:550;color:#53647b;font-size:12px}
+input,select,textarea{background:#fff;border-color:#d9e1ed;font-size:14px;color:#243651;min-height:42px}
+input::placeholder,textarea::placeholder{color:#8795a8}
+.card,.panel,details,.wallet-card,.wallet-overview{border-radius:12px;box-shadow:none;border-color:#e0e6ef}
+.cards{grid-template-columns:repeat(4,minmax(0,1fr));gap:16px;margin-bottom:26px}
+.card{padding:20px;background:#fff;border-top:3px solid #cbd7ef}
+.card small{font-size:12px}.card strong{font-size:clamp(19px,2vw,29px);margin-top:10px;font-weight:700}
+.card:last-child{background:#eff4ff;border-top-color:#3157d5}
+.card:nth-child(2){border-top-color:#8caae8}.card:nth-child(3){border-top-color:#90a1bc}
+#recap{border:0;background:transparent;padding:0;margin:0}
+#recap>summary{display:none}
+.breakdown{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:22px;margin:0}
+.breakdown>div{background:white;border:1px solid #e0e6ef;border-radius:12px;padding:22px}
+.breakdown h2{font-size:17px;margin:0 0 18px}
+.breakdown p{font-size:12px;margin:-10px 0 14px}
+.breakdown td{padding:12px 4px}
+.breakdown td:last-child{text-align:right;font-weight:600}
+.breakdown tr:last-child td{border:0}
+.panel{margin-top:0;padding:22px}
+.panel h2{font-size:17px;margin-bottom:20px}
+th{background:#f5f7fb;color:#69788c;font-size:11px;font-weight:650;padding:11px 12px}
+td{padding:16px 12px;font-size:13px;border-color:#edf0f5}
+tbody tr:hover{background:#fafbfe}
+td small{font-size:11px}
+td button{font-size:12px;min-height:34px;padding:6px 12px}
+.msg:empty{display:none}.msg{margin:0 0 18px}
+.wallet-section{border:0;padding:0;margin:0}
+.wallet-section>.section-heading{display:none}
+.wallet-notice{font-size:12px;color:#6a7890;margin:0 0 20px;max-width:940px}
+.wallet-overview{margin:0 0 22px;padding:22px;gap:24px}
+.wallet-overview>div{border-left:2px solid #dce5ff;padding-left:16px}
+.wallet-overview strong{font-size:26px}
+.wallet-overview small{font-size:12px}
+.wallet-grid{grid-template-columns:repeat(3,minmax(0,1fr));gap:18px}
+.wallet-card{padding:20px}
+.wallet-card h3{font-size:18px}
+.wallet-kind{font-size:11px}.avatar{width:30px;height:30px;border-radius:9px;font-size:13px}
+.wallet-amount{font-size:27px;margin-top:7px}
+.wallet-detail{padding:14px 0 18px;gap:5px}
+.wallet-card button{background:white;font-size:13px;min-height:38px}
+.history-panel{margin-top:0}
+.section-heading h2{font-size:18px}
+#historyTotal{font-size:12px}
+body[data-view="overview"] #transactionTools .search,
+body[data-view="overview"] #statusFilter,
+body[data-view="overview"] #transactionsPanel,
+body[data-view="overview"] #walletSection,
+body[data-view="transactions"] #cards,
+body[data-view="transactions"] #recap,
+body[data-view="transactions"] #walletSection,
+body[data-view="balances"] #transactionTools,
+body[data-view="balances"] #cards,
+body[data-view="balances"] #recap,
+body[data-view="balances"] #transactionsPanel,
+body[data-view="balances"] .history-panel,
+body[data-view="withdrawals"] #transactionTools,
+body[data-view="withdrawals"] #cards,
+body[data-view="withdrawals"] #recap,
+body[data-view="withdrawals"] #transactionsPanel,
+body[data-view="withdrawals"] #walletOverview,
+body[data-view="withdrawals"] #walletFilters,
+body[data-view="withdrawals"] #wallets,
+body[data-view="withdrawals"] .wallet-notice{display:none}
+dialog{width:min(600px,calc(100vw - 28px));padding:26px}
+dialog h2{font-size:21px}
+dialog .actions{padding-top:14px;border-top:1px solid #e5eaf2}
+@media(min-width:1600px){main{margin-right:auto;max-width:1576px}}
+@media(max-width:1150px){
+ .sidebar{width:190px;padding-left:12px;padding-right:12px}
+ main{margin-left:190px;padding:28px 22px}
+ .wallet-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
+ .cards{gap:10px}.card{padding:16px}.card strong{font-size:20px}
+}
+@media(max-width:780px){
+ .sidebar{position:sticky;top:0;width:100%;padding:12px 14px;background:#101f35}
+ .brand{border:0;margin:0;padding:0 4px 10px}
+ .brand strong{font-size:20px}.brand span,.sidebar-footer{display:none}
+ .app-nav{grid-template-columns:repeat(4,minmax(0,1fr));gap:4px}
+ .app-nav button{padding:9px 3px;text-align:center;font-size:11px;min-height:38px;border-radius:7px}
+ main{margin:0;padding:22px 14px}
+ header{margin-bottom:20px;padding-bottom:18px;gap:14px}
+ header>div{width:100%}
+ header>button{width:auto!important}
+ h1{font-size:26px}
+ header p{font-size:12px}
+ #transactionTools{padding:14px;gap:12px;display:grid;grid-template-columns:repeat(2,minmax(0,1fr))}
+ #transactionTools label{min-width:0;width:100%}
+ #transactionTools .search{grid-column:1/-1}
+ #transactionTools #reload{align-self:end}
+ input,select,textarea{font-size:16px}
+ .cards{grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin-bottom:20px}
+ .card{padding:14px}.card strong{font-size:20px}.card small{font-size:11px}
+ .breakdown{grid-template-columns:minmax(0,1fr);gap:18px}
+ .breakdown>div{padding:18px}
+ .wallet-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+ .wallet-card{padding:14px}
+ .wallet-amount{font-size:20px}
+ .wallet-card h3{font-size:15px;overflow-wrap:anywhere}
+ .wallet-detail{font-size:11px}
+ .wallet-kind{font-size:10px}.avatar{display:none}
+ .wallet-overview{grid-template-columns:minmax(0,1fr);padding:18px;gap:14px}
+ .wallet-overview>div+div{border-top:0;padding-top:0}
+ .wallet-overview>div{padding-left:12px}
+ .wallet-overview strong{font-size:23px}
+ .panel{padding:14px}
+ .history-panel .tools{display:grid;grid-template-columns:minmax(0,1fr)}
+ .history-panel .section-heading{gap:6px}
+}
+@media(max-width:360px){
+ .wallet-grid{grid-template-columns:minmax(0,1fr)}
+ .card strong{font-size:17px}
+}
+
+.app-nav button{transition:none}
+.app-nav button[aria-current="page"],
+.app-nav button[aria-current="page"]:hover:not(:disabled){background:#3157d5;color:#fff}
+.breakdown{align-items:start}
 </style>
 </head>
-<body>
+<body data-view="overview">
+<aside class="sidebar">
+  <div class="brand"><strong>Editin</strong><span>Keuangan jasa editor</span></div>
+  <nav class="app-nav" aria-label="Menu utama">
+    <button type="button" data-page="overview" aria-current="page">Ringkasan</button>
+    <button type="button" data-page="transactions">Transaksi</button>
+    <button type="button" data-page="balances">Saldo</button>
+    <button type="button" data-page="withdrawals">Pengambilan</button>
+  </nav>
+  <div class="sidebar-footer">Pendapatan Editor</div>
+</aside>
 <main>
-<header><div><h1>Pendapatan Editor</h1><p id="subtitle">Rekap transaksi dan fee bulanan</p></div><button class="primary" id="add" disabled>+ Transaksi</button></header>
-<div class="tools">
+<header><div><h1 id="pageTitle">Ringkasan keuangan</h1><p id="subtitle">Rekap transaksi dan fee bulanan</p></div><button class="primary" id="add" disabled>+ Transaksi</button><button class="primary" id="headerWithdraw" hidden disabled>Catat pengambilan</button></header>
+<div class="tools" id="transactionTools">
 <label>Tampilan <select id="scope"><option value="month">Per bulan</option><option value="all">Semua periode</option></select></label>
 <label id="periodLabel">Periode <input type="month" id="period" min="2000-01" max="2099-12"></label>
 <label class="search">Cari <input id="query" type="search" placeholder="Nama editor, jasa, atau metode bayar"></label>
-<label>Status bayar <select id="filter"><option value="">Semua status</option><option>Lunas</option><option>Belum bayar</option><option>Belum diketahui</option><option value="review">Perlu ditinjau</option></select></label>
+<label id="statusFilter">Status bayar <select id="filter"><option value="">Semua status</option><option>Lunas</option><option>Belum bayar</option><option>Belum diketahui</option><option value="review">Perlu ditinjau</option></select></label>
 <button id="reload">Muat ulang</button>
 </div>
 <div id="message" class="msg" role="status">Memuat transaksi…</div>
 <div class="cards" id="cards"></div>
-<details><summary>Rekap pegawai dan hasil usaha</summary>
+<details id="recap" open><summary>Rekap pegawai dan hasil usaha</summary>
 <div class="breakdown">
 <div><h2>Nama pegawai dan fee total</h2><table><tbody id="editors"></tbody></table></div>
 <div><h2>Alokasi hasil usaha</h2><p id="allocation-note"></p><table><tbody id="allocation"></tbody></table></div>
 </div>
 <form class="cost" id="costForm" hidden><label>Biaya operasional lain (Rp)<input id="cost" type="number" min="0" max="1000000000000" step="0.01" required disabled></label><button id="saveCost" disabled>Simpan biaya</button></form>
 </details>
-<section class="panel"><h2 id="tableTitle">Transaksi</h2><div class="scroll"><table>
+<section class="panel" id="transactionsPanel"><h2 id="tableTitle">Transaksi</h2><div class="scroll"><table>
 <thead><tr><th>Tanggal</th><th>Nama editor</th><th>Jasa</th><th>Harga</th><th>Biaya jasa</th><th>Pembayaran</th><th>Aksi</th></tr></thead>
 <tbody id="records"></tbody></table></div><p id="empty" hidden>Belum ada transaksi untuk filter ini.</p></section>
 <section id="walletSection" class="wallet-section">
@@ -147,7 +292,7 @@ dialog{box-shadow:0 24px 90px #0c25414a;border:0;border-radius:18px;padding:24px
   </div>
   <p class="wallet-notice">Saldo mengikuti seluruh transaksi tercatat, termasuk pembayaran yang statusnya belum diketahui. Koreksi transaksi akan memperbarui saldo.</p>
   <div class="wallet-overview" id="walletOverview"></div>
-  <div class="tools">
+  <div class="tools" id="walletFilters">
     <label>Jenis saldo<select id="walletType"><option value="">Semua jenis</option><option>Alokasi hasil usaha</option><option>Fee editor</option></select></label>
     <label class="search">Cari akun<input id="walletSearch" type="search" placeholder="Nama orang atau komponen"></label>
   </div>
@@ -214,6 +359,7 @@ dialog{box-shadow:0 24px 90px #0c25414a;border:0;border-radius:18px;padding:24px
 const $ = id => document.getElementById(id);
 const form = $('transaction');
 let data;
+let currentView = "overview";
 let editing;
 let requestId;
 let busy = false;
@@ -291,6 +437,7 @@ function render(resetCost = false) {
   $('subtitle').textContent = allPeriods
     ? 'Rekap transaksi dan fee seluruh periode'
     : 'Rekap transaksi dan fee bulanan';
+  updatePageHeading();
   const monthRows = allPeriods ? data.records : data.records.filter(r => r.period === period);
   const unknownRate = monthRows.filter(r => !r.rate).length;
   const review = monthRows.filter(r => r.issue).length;
@@ -464,6 +611,7 @@ function renderWallets() {
   }));
   if (!accounts.length) $('wallets').append(node('p','Akun belum tersedia untuk filter ini.'));
   renderHistory();
+  updatePageHeading();
 }
 
 function fillAccountChoices() {
@@ -588,6 +736,40 @@ for (const id of ['historyAccount','historyFrom','historyTo','historyStatus']) {
   $(id).onchange = renderHistory;
 }
 
+
+function updatePageHeading() {
+  const titles = {
+    overview:'Ringkasan keuangan', transactions:'Transaksi jasa editor',
+    balances:'Saldo akun', withdrawals:'Pengambilan dana'
+  };
+  const all = $('scope').value === 'all';
+  const period = $('period').value;
+  const periodText = period ? new Intl.DateTimeFormat('id-ID',{
+    month:'long',year:'numeric'
+  }).format(new Date(period + '-01T12:00:00')) : '';
+  $('pageTitle').textContent = titles[currentView];
+  $('subtitle').textContent = currentView === 'balances'
+    ? 'Pendapatan, pengambilan, dan saldo setiap akun · Seluruh periode'
+    : currentView === 'withdrawals'
+      ? 'Catatan pengambilan dana dan pembatalan · Seluruh periode'
+      : (all ? 'Seluruh periode' : periodText);
+  $('add').hidden = currentView === 'balances' || currentView === 'withdrawals';
+  $('headerWithdraw').hidden = currentView === 'overview' || currentView === 'transactions';
+  $('headerWithdraw').disabled = $('withdraw').disabled;
+}
+function setPage(view) {
+  currentView = view;
+  document.body.dataset.view = view;
+  for (const button of document.querySelectorAll('[data-page]')) {
+    if (button.dataset.page === view) button.setAttribute('aria-current','page');
+    else button.removeAttribute('aria-current');
+  }
+  updatePageHeading();
+}
+for (const button of document.querySelectorAll('[data-page]')) {
+  button.onclick = () => setPage(button.dataset.page);
+}
+$('headerWithdraw').onclick = () => openWithdrawal();
 load();
 </script>
 </body>
