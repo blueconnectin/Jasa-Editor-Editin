@@ -251,6 +251,103 @@ dialog .actions{padding-top:14px;border-top:1px solid #e5eaf2}
 .app-nav button[aria-current="page"],
 .app-nav button[aria-current="page"]:hover:not(:disabled){background:#3157d5;color:#fff}
 .breakdown{align-items:start}
+:root{--ink:#14243c;--muted:#425672;--line:#d5deeb;--green:#234ecb}
+body{font-size:16px;color:#14243c;background:#f1f5fb}
+.sidebar{background:#10233f}
+.brand strong{font-size:28px}.brand span,.sidebar-footer{font-size:14px;color:#c2d0e5}
+.app-nav button{font-size:16px;color:#c5d3e8;font-weight:550}
+main{padding:32px clamp(22px,3vw,44px)}
+header{padding-bottom:22px}
+h1{font-size:32px}
+header p{font-size:16px;color:#425672}
+label{font-size:14px;color:#354b69;font-weight:600}
+input,select,textarea{font-size:16px;color:#14243c;border-color:#bac9de;min-height:46px}
+button{font-size:15px;min-height:44px}
+.cards{gap:14px}
+.card{border-top:1px solid #d5deeb;border-radius:15px;padding:20px}
+.card small{font-size:14px;color:#425672}
+.card strong{font-size:clamp(24px,2.2vw,32px);letter-spacing:-.6px;margin:10px 0}
+.card:last-child{background:#e9f0ff;border-top:1px solid #d5deeb}
+.card:nth-child(2),.card:nth-child(3){border-top:1px solid #d5deeb}
+.metric-context{font-size:13px;display:block;color:#354b69}
+.dashboard-grid{display:grid;grid-template-columns:minmax(0,1.4fr) minmax(310px,1fr);gap:20px;margin-bottom:20px}
+.dashboard-panel{background:white;border:1px solid #d5deeb;border-radius:15px;padding:23px;min-width:0}
+.dashboard-heading{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-bottom:20px}
+.dashboard-heading h2{font-size:19px;margin:0;font-weight:650;color:#14243c}
+.dashboard-heading>span{font-size:13px;color:#425672}
+.dashboard-link{font-size:14px;padding:8px 12px;color:#1d46b0;border-color:#c1cee2}
+.chart-legend{display:flex;gap:20px;flex-wrap:wrap;color:#354b69;font-size:14px;margin-bottom:22px}
+.legend-dot{display:inline-block;width:10px;height:10px;border-radius:50%;background:#2856db;margin-right:7px}
+.fee-dot{background:#7188b6}
+.trend-layout{display:grid;grid-template-columns:64px minmax(0,1fr);gap:10px}
+.trend-axis{display:flex;flex-direction:column;justify-content:space-between;height:224px;color:#425672;font-size:13px;text-align:right}
+.trend-chart{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:12px;height:224px;border-bottom:1px solid #cbd6e6;background:repeating-linear-gradient(to top,transparent 0,transparent 55px,#e1e8f2 56px,transparent 57px)}
+.trend-group{display:flex;align-items:end;justify-content:center;gap:5px;height:100%;min-width:0}
+.trend-bar{background:#2856db;width:20px;max-width:45%;border-radius:5px 5px 0 0}
+.fee-bar{background:#7188b6}
+.trend-months{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));text-align:center;font-size:13px;color:#354b69;margin-top:12px}
+.chart-description{font-size:13px;color:#425672;margin:18px 0 0}
+#allocation-note{font-size:13px;color:#425672;margin:-8px 0 18px}
+.allocation-bars{display:grid;gap:14px}
+.allocation-label{display:flex;justify-content:space-between;gap:10px;font-size:14px;color:#243a59;margin-bottom:7px;flex-wrap:wrap}
+.allocation-label strong{font-weight:600}
+.allocation-track{background:#e9effa;height:6px;border-radius:5px}
+.allocation-track>div{background:#2856db;height:100%;border-radius:5px}
+.dashboard-panel .scroll table{min-width:0}
+.recent-table th{font-size:13px}
+.recent-table td{font-size:14px;padding:15px 8px}
+.recent-table td:last-child{text-align:right}
+.amount-out{color:#96400d;font-weight:550}
+.available-row{display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;padding:19px 0;border-top:1px solid #dce4ef;font-size:16px}
+.available-row strong{font-weight:600}
+.dashboard-context{font-size:13px;margin:-10px 0 18px;color:#425672}
+.editor-recap{margin-bottom:22px}
+.editor-recap td{font-size:15px}
+.editor-recap td:last-child{text-align:right}
+th{font-size:14px;color:#3d5270}
+td{font-size:15px}
+td small{font-size:13px;color:#425672}
+td button{font-size:14px}
+.wallet-kind,.wallet-detail,.wallet-notice,#historyTotal{font-size:14px;color:#425672}
+.wallet-card h3{font-size:20px}
+.wallet-amount{font-size:29px}
+.wallet-card button{font-size:15px}
+.wallet-overview small{font-size:14px;color:#425672}
+.wallet-overview strong{font-size:29px}
+.section-heading h2,.panel h2{font-size:20px}
+.msg,.error,.warning{font-size:15px}
+@media(max-width:1150px){
+ .cards{grid-template-columns:repeat(2,minmax(0,1fr))}
+ .dashboard-grid{grid-template-columns:minmax(0,1fr)}
+ .dashboard-heading h2{font-size:19px}
+}
+@media(max-width:780px){
+ .sidebar{padding:12px 14px}.brand strong{font-size:22px}
+ .app-nav button{font-size:13px;min-height:44px}
+ main{padding:22px 14px}
+ header p{font-size:15px}h1{font-size:28px}
+ .card{padding:15px}.card small{font-size:13px}
+ .card strong{font-size:23px;overflow-wrap:anywhere}
+ .metric-context{font-size:13px}
+ .dashboard-panel{padding:18px}
+ .dashboard-heading{margin-bottom:18px}
+ .trend-layout{grid-template-columns:52px minmax(0,1fr);gap:5px}
+ .trend-chart{gap:6px;height:200px}.trend-axis{height:200px;font-size:12px}
+ .trend-months{font-size:12px}
+ .trend-bar{width:16px}.trend-group{gap:3px}
+ .allocation-label{font-size:14px}
+ .recent-table td{font-size:13px;padding:13px 4px}
+ .recent-table th{font-size:13px;padding:10px 4px}
+ .wallet-kind,.wallet-detail{font-size:13px}
+ .wallet-card h3{font-size:18px}
+ .wallet-amount{font-size:23px}
+ .wallet-card button{font-size:14px}
+}
+@media(max-width:380px){
+ .card strong{font-size:20px}
+ .app-nav button{font-size:12px}
+}
+
 </style>
 </head>
 <body data-view="overview">
@@ -275,13 +372,40 @@ dialog .actions{padding-top:14px;border-top:1px solid #e5eaf2}
 </div>
 <div id="message" class="msg" role="status">Memuat transaksi…</div>
 <div class="cards" id="cards"></div>
-<details id="recap" open><summary>Rekap pegawai dan hasil usaha</summary>
-<div class="breakdown">
-<div><h2>Nama pegawai dan fee total</h2><table><tbody id="editors"></tbody></table></div>
-<div><h2>Alokasi hasil usaha</h2><p id="allocation-note"></p><table><tbody id="allocation"></tbody></table></div>
-</div>
-<form class="cost" id="costForm" hidden><label>Biaya operasional lain (Rp)<input id="cost" type="number" min="0" max="1000000000000" step="0.01" required disabled></label><button id="saveCost" disabled>Simpan biaya</button></form>
-</details>
+<section id="recap">
+  <div class="dashboard-grid">
+    <section class="dashboard-panel">
+      <div class="dashboard-heading"><h2>Tren pendapatan</h2><span id="trendRange"></span></div>
+      <div class="chart-legend"><span><b class="legend-dot"></b>Omzet</span><span><b class="legend-dot fee-dot"></b>Fee editor</span></div>
+      <div class="trend-layout"><div id="trendAxis" class="trend-axis"></div><div><div id="trendChart" class="trend-chart" role="img"></div><div id="trendMonths" class="trend-months"></div></div></div>
+      <p id="trendDescription" class="chart-description"></p>
+    </section>
+    <section class="dashboard-panel">
+      <div class="dashboard-heading"><h2>Alokasi hasil usaha</h2></div>
+      <p id="allocation-note"></p>
+      <div id="allocationBars" class="allocation-bars"></div>
+      <table hidden><tbody id="allocation"></tbody></table>
+    </section>
+  </div>
+  <div class="dashboard-grid dashboard-bottom">
+    <section class="dashboard-panel">
+      <div class="dashboard-heading"><h2>Pengambilan terbaru</h2><button type="button" class="dashboard-link" data-overview-go="withdrawals">Lihat semua</button></div>
+      <div class="scroll"><table class="recent-table"><thead><tr><th>Tanggal</th><th>Akun</th><th>Pengambilan</th></tr></thead><tbody id="recentWithdrawals"></tbody></table></div>
+      <p id="recentEmpty" hidden>Belum ada pengambilan.</p>
+    </section>
+    <section class="dashboard-panel">
+      <div class="dashboard-heading"><h2>Saldo alokasi tersedia</h2><button type="button" class="dashboard-link" data-overview-go="balances">Semua akun</button></div>
+      <p class="dashboard-context">Seluruh periode</p>
+      <div id="availableAccounts"></div>
+    </section>
+  </div>
+  <section class="dashboard-panel editor-recap">
+    <div class="dashboard-heading"><h2>Pendapatan tiap editor</h2><span>Fee dari transaksi periode terpilih</span></div>
+    <table><tbody id="editors"></tbody></table>
+  </section>
+  <form class="cost" id="costForm" hidden><label>Biaya operasional lain (Rp)<input id="cost" type="number" min="0" max="1000000000000" step="0.01" required disabled></label><button id="saveCost" disabled>Simpan biaya</button></form>
+</section>
+
 <section class="panel" id="transactionsPanel"><h2 id="tableTitle">Transaksi</h2><div class="scroll"><table>
 <thead><tr><th>Tanggal</th><th>Nama editor</th><th>Jasa</th><th>Harga</th><th>Biaya jasa</th><th>Pembayaran</th><th>Aksi</th></tr></thead>
 <tbody id="records"></tbody></table></div><p id="empty" hidden>Belum ada transaksi untuk filter ini.</p></section>
@@ -471,6 +595,7 @@ function render(resetCost = false) {
   $('cost').disabled = !periodValid();
   $('saveCost').disabled = !periodValid();
   if (resetCost) $('cost').value = cost;
+  renderDashboardSummary(revenue, totalFee, profit);
   const query = $('query').value.trim().toLocaleLowerCase('id');
   const filter = $('filter').value;
   const view = monthRows.filter(r => (!filter || (filter === 'review' ? r.issue : r.status === filter)) &&
@@ -770,6 +895,115 @@ for (const button of document.querySelectorAll('[data-page]')) {
   button.onclick = () => setPage(button.dataset.page);
 }
 $('headerWithdraw').onclick = () => openWithdrawal();
+function allocationWallets() {
+  return (data.wallets || []).filter(account => account.type === 'Alokasi hasil usaha');
+}
+
+function monthTotals(period) {
+  const rows = data.records.filter(record => record.period === period);
+  const revenue = round(rows.reduce((sum, record) => sum + Number(record.price), 0));
+  const fees = round(rows.reduce((sum, record) => sum + (fee(record) || 0), 0));
+  return {revenue, fees, profit: round(revenue - fees), count: rows.length};
+}
+
+function comparison(current, previous, hasPrevious) {
+  if (!hasPrevious) return 'Belum ada data bulan sebelumnya';
+  if (previous === 0) return current === 0 ? 'Sama dengan bulan sebelumnya' : 'Bulan sebelumnya Rp0';
+  const change = round((current - previous) / Math.abs(previous) * 100);
+  return (change > 0 ? '+' : '') + new Intl.NumberFormat('id-ID',{maximumFractionDigits:1}).format(change) + '% dari bulan sebelumnya';
+}
+
+function renderDashboardSummary(revenue, totalFee, profit) {
+  const all = $('scope').value === 'all';
+  const period = $('period').value;
+  const previousDate = new Date(period + '-01T12:00:00Z');
+  previousDate.setUTCMonth(previousDate.getUTCMonth() - 1);
+  const previous = monthTotals(previousDate.toISOString().slice(0,7));
+  const accounts = allocationWallets();
+  const balance = round(accounts.reduce((sum, account) => sum + account.balance,0));
+  const cards = [
+    ['Total omzet',revenue,all ? 'Seluruh transaksi tercatat' : comparison(revenue,previous.revenue,previous.count > 0)],
+    ['Fee editor / operasional',totalFee,all ? 'Seluruh periode' : comparison(totalFee,previous.fees,previous.count > 0)],
+    ['Sisa hasil usaha',profit,all ? 'Omzet dikurangi fee editor' : comparison(profit,previous.profit,previous.count > 0)],
+    ['Saldo alokasi',balance,'Setelah pengambilan · Seluruh periode']
+  ];
+  $('cards').replaceChildren(...cards.map(([label,value,context]) => {
+    const card = node('div',undefined,'card');
+    card.append(node('small',label),node('strong',money(value)),node('span',context,'metric-context'));
+    return card;
+  }));
+  const basis = Math.max(profit,0);
+  const definitions = [['Mumu',41],['Gina',31],['Hilmi',10],['Iklan',10],['Investasi',3],['Dana darurat',3],['Infaq',2]];
+  // Gunakan hasil pembulatan yang sama dengan rekap alokasi sebelumnya.
+  const allocated = new Map();
+  for (const [name,percent] of definitions) allocated.set(name,round(basis * percent / 100));
+  allocated.set('Gina',round(basis - [...allocated].filter(([name]) => name !== 'Gina').reduce((sum,[,value]) => sum + value,0)));
+  $('allocationBars').replaceChildren(...definitions.map(([name,percent]) => {
+    const row = node('div',undefined,'allocation-row');
+    const label = node('div',undefined,'allocation-label');
+    label.append(node('span',name + ' · ' + percent + '%'),node('strong',money(allocated.get(name))));
+    const track = node('div',undefined,'allocation-track');
+    const bar = node('div');
+    bar.style.width = percent + '%';
+    track.append(bar);
+    row.append(label,track);
+    return row;
+  }));
+  const lastPeriod = all
+    ? data.records.map(record => record.period).filter(value => /^20\d\d-\d\d$/.test(value)).sort().pop() || data.today.slice(0,7)
+    : period;
+  const end = new Date(lastPeriod + '-01T12:00:00Z');
+  const months = Array.from({length:6},(_,index) => {
+    const date = new Date(end);
+    date.setUTCMonth(date.getUTCMonth() - 5 + index);
+    const key = date.toISOString().slice(0,7);
+    return {key,date,...monthTotals(key)};
+  });
+  const max = Math.max(1,...months.map(month => Math.max(month.revenue,month.fees)));
+  const maximum = Math.ceil(max / Math.pow(10,Math.floor(Math.log10(max)))) * Math.pow(10,Math.floor(Math.log10(max)));
+  const compact = new Intl.NumberFormat('id-ID',{notation:'compact',maximumFractionDigits:1});
+  $('trendAxis').replaceChildren(...[maximum,maximum/2,0].map(value => node('span','Rp' + compact.format(value))));
+  $('trendChart').replaceChildren(...months.map(month => {
+    const group = node('div',undefined,'trend-group');
+    for (const [kind,value] of [['Omzet',month.revenue],['Fee editor',month.fees]]) {
+      const mark = node('div',undefined,kind === 'Omzet' ? 'trend-bar' : 'trend-bar fee-bar');
+      mark.style.height = value / maximum * 100 + '%';
+      mark.title = month.key + ' · ' + kind + ' ' + money(value);
+      mark.setAttribute('aria-label',mark.title);
+      group.append(mark);
+    }
+    return group;
+  }));
+  $('trendMonths').replaceChildren(...months.map(month => node('span',new Intl.DateTimeFormat('id-ID',{month:'short',timeZone:'UTC'}).format(month.date))));
+  const rangeFormat = new Intl.DateTimeFormat('id-ID',{month:'short',year:'numeric',timeZone:'UTC'});
+  $('trendRange').textContent = rangeFormat.format(months[0].date) + ' – ' + rangeFormat.format(end);
+  const description = months.map(month => month.key + ', omzet ' + money(month.revenue) + ', fee ' + money(month.fees)).join('. ');
+  $('trendChart').setAttribute('aria-label',description);
+  const last = months[5];
+  $('trendDescription').textContent = rangeFormat.format(end) + ' · Omzet ' + money(last.revenue) + ' · Fee ' + money(last.fees);
+
+  const entries = (data.withdrawals || []).filter(entry => !entry.cancelled &&
+    (all || entry.date.slice(0,7) === period))
+    .sort((a,b) => b.date.localeCompare(a.date) || b.created.localeCompare(a.created)).slice(0,5);
+  $('recentEmpty').hidden = entries.length > 0;
+  $('recentWithdrawals').replaceChildren(...entries.map(entry => {
+    const wallet = (data.wallets || []).find(account => account.id === entry.account);
+    const account = node('td',wallet ? wallet.name : entry.account);
+    if (wallet) account.append(node('small',wallet.type));
+    const row = node('tr');
+    row.append(node('td',entry.date.split('-').reverse().join('/')),account,node('td','−' + money(entry.amount),'money amount-out'));
+    return row;
+  }));
+  $('availableAccounts').replaceChildren(...accounts.sort((a,b) => b.balance - a.balance).slice(0,3).map(account => {
+    const row = node('div',undefined,'available-row');
+    row.append(node('span',account.name),node('strong',money(account.balance)));
+    return row;
+  }));
+}
+for (const button of document.querySelectorAll('[data-overview-go]')) {
+  button.onclick = () => setPage(button.dataset.overviewGo);
+}
+
 load();
 </script>
 </body>
