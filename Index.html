@@ -73,7 +73,8 @@ dialog{max-height:calc(100dvh - 24px);overflow-y:auto}
 <main>
 <header><div><h1>Pendapatan Editor</h1><p id="subtitle">Rekap transaksi dan fee bulanan</p></div><button class="primary" id="add" disabled>+ Transaksi</button></header>
 <div class="tools">
-<label>Periode <input type="month" id="period" min="2000-01" max="2099-12"></label>
+<label>Tampilan <select id="scope"><option value="month">Per bulan</option><option value="all">Semua periode</option></select></label>
+<label id="periodLabel">Periode <input type="month" id="period" min="2000-01" max="2099-12"></label>
 <label class="search">Cari <input id="query" type="search" placeholder="Nama editor, jasa, atau metode bayar"></label>
 <label>Status bayar <select id="filter"><option value="">Semua status</option><option>Lunas</option><option>Belum bayar</option><option>Belum diketahui</option><option value="review">Perlu ditinjau</option></select></label>
 <button id="reload">Muat ulang</button>
@@ -183,7 +184,12 @@ function addAmounts(target, items) {
 function render(resetCost = false) {
   if (!data) return;
   const period = $('period').value;
-  const monthRows = data.records.filter(r => r.period === period);
+  const allPeriods = $('scope').value === 'all';
+  $('periodLabel').hidden = allPeriods;
+  $('subtitle').textContent = allPeriods
+    ? 'Rekap transaksi dan fee seluruh periode'
+    : 'Rekap transaksi dan fee bulanan';
+  const monthRows = allPeriods ? data.records : data.records.filter(r => r.period === period);
   const unknownRate = monthRows.filter(r => !r.rate).length;
   const review = monthRows.filter(r => r.issue).length;
   const sum = (list, extract) => round(list.reduce((total,r) => total + (extract(r) || 0),0));
@@ -247,7 +253,7 @@ function openForm(record) {
   form.reset();
   const fields = form.elements;
   fields.date.value = record ? record.date :
-    $('period').value === data.today.slice(0,7) || !periodValid() ? data.today : $('period').value + '-01';
+    $('scope').value === 'all' || $('period').value === data.today.slice(0,7) || !periodValid() ? data.today : $('period').value + '-01';
   if (record) {
     for (const name of ['editor','service','price','rate','method','status','note']) fields[name].value = record[name];
   }
@@ -270,7 +276,7 @@ async function mutate(action, notice, newPeriod) {
   try {
     await action();
     $('dialog').close();
-    if (newPeriod) $('period').value = newPeriod;
+    if (newPeriod && $('scope').value === 'month') $('period').value = newPeriod;
     await load(notice);
   } catch(error) {
     $('formError').textContent = error.message || String(error);
@@ -307,6 +313,7 @@ $('costForm').onsubmit = async event => {
 $('add').onclick = () => openForm();
 $('reload').onclick = () => load();
 $('period').oninput = () => render(true);
+$('scope').onchange = () => render(true);
 $('query').oninput = () => render();
 $('filter').onchange = () => render();
 load();
