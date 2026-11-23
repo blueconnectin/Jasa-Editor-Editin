@@ -362,7 +362,7 @@ td button{font-size:14px}
   <div class="sidebar-footer">Pendapatan Editor</div>
 </aside>
 <main>
-<header><div><h1 id="pageTitle">Ringkasan keuangan</h1><p id="subtitle">Rekap transaksi dan fee bulanan</p></div><button class="primary" id="add" disabled>+ Transaksi</button><button class="primary" id="headerWithdraw" hidden disabled>Catat pengambilan</button></header>
+<header><div><h1 id="pageTitle">Ringkasan keuangan</h1><p id="subtitle">Rekap transaksi dan fee bulanan</p></div><button class="primary" id="add" hidden disabled>+ Transaksi</button><button class="primary" id="headerWithdraw" hidden disabled>Catat pengambilan</button></header>
 <div class="tools" id="transactionTools">
 <label>Tampilan <select id="scope"><option value="month">Per bulan</option><option value="all">Semua periode</option></select></label>
 <label id="periodLabel">Periode <input type="month" id="period" min="2000-01" max="2099-12"></label>
@@ -878,8 +878,8 @@ function updatePageHeading() {
     : currentView === 'withdrawals'
       ? 'Catatan pengambilan dana dan pembatalan · Seluruh periode'
       : (all ? 'Seluruh periode' : periodText);
-  $('add').hidden = currentView === 'balances' || currentView === 'withdrawals';
-  $('headerWithdraw').hidden = currentView === 'overview' || currentView === 'transactions';
+  $('add').hidden = currentView !== 'transactions';
+  $('headerWithdraw').hidden = currentView !== 'withdrawals';
   $('headerWithdraw').disabled = $('withdraw').disabled;
 }
 function setPage(view) {
