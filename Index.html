@@ -390,6 +390,16 @@ body[data-view="withdrawals"] #balanceGroupHeader{display:none}
  #walletFilters input{width:100%}
 }
 
+
+.service-fieldset{min-width:0;border:1px solid #c3d0e3;border-radius:10px;padding:14px;margin:0}
+.service-fieldset legend{font-size:15px;color:#243a59;font-weight:600;padding:0 6px}
+.service-hint{display:block;font-size:13px;font-weight:400;color:#425672}
+.service-choices{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:6px 12px}
+label.service-option{display:flex;align-items:center;gap:10px;font-size:15px;color:#243a59;min-height:44px;font-weight:400}
+.service-option input{width:20px;height:20px;min-height:20px;flex:0 0 20px;accent-color:#234ecb;padding:0}
+.other-service{margin-top:12px}
+@media(max-width:480px){.service-choices{grid-template-columns:minmax(0,1fr)}}
+
 </style>
 </head>
 <body data-view="overview">
@@ -514,10 +524,20 @@ body[data-view="withdrawals"] #balanceGroupHeader{display:none}
 <div class="fields">
 <label>Tanggal <input name="date" type="date" min="2000-01-01" max="2099-12-31" required></label>
 <label>Nama editor <select name="editor" id="editorSelect" required><option value="">Pilih editor</option></select></label>
-<label class="wide">Jasa <input name="service" list="services" maxlength="500" required></label>
+<fieldset class="wide service-fieldset">
+<legend>Jenis jasa <span class="service-hint">Pilih satu atau lebih</span></legend>
+<div id="serviceChoices" class="service-choices"></div>
+<label class="other-service" id="otherServiceLabel" hidden>Rincian jasa lainnya
+<input id="otherService" maxlength="500" placeholder="Tuliskan jenis jasa">
+</label>
+<p id="serviceError" class="error" role="alert"></p>
+<input type="hidden" name="service">
+</fieldset>
 <label>Harga (Rp) <input name="price" type="number" min="0" max="1000000000000" step="0.01" required></label>
 <label>Biaya jasa (%) <select name="rate" required><option value="">Pilih tarif</option><option value="60">60%</option><option value="70">70%</option><option value="80">80%</option></select></label>
-<label>Metode bayar <input name="method" list="methods" maxlength="150" placeholder="Contoh BCA"></label>
+<label>Metode bayar <select name="method" required>
+<option value="">Pilih metode bayar</option><option>Shopeepay</option><option>BCA</option>
+</select></label>
 <label hidden>Status bayar <select name="status"><option>Belum diketahui</option><option>Belum bayar</option><option>Lunas</option></select></label>
 <label class="wide" hidden>Catatan <textarea name="note" rows="2" maxlength="2000"></textarea></label>
 </div>
@@ -682,6 +702,7 @@ function openForm(record) {
   $('archive').hidden = !record;
   $('issue').textContent = record && record.issue ? record.issue + ' · Baris Excel ' + record.source : '';
   $('formError').textContent = '';
+  setupServiceChoices(record);
   updateEstimate();
   $('dialog').showModal();
 }
@@ -710,6 +731,17 @@ form.oninput = updateEstimate;
 form.onsubmit = event => {
   event.preventDefault();
   const fields = Object.fromEntries(new FormData(form));
+  const services = [...$('serviceChoices').querySelectorAll('input:checked')].map(input => input.value);
+  if (!services.length) {
+    $('serviceError').textContent = 'Pilih minimal satu jenis jasa.';
+    $('serviceChoices').querySelector('input').focus();
+    return;
+  }
+  delete fields.services;
+  if (!editing || servicesChanged) {
+    fields.services = services;
+    fields.otherService = services.includes('Lainnya') ? $('otherService').value.trim() : '';
+  }
   mutate(() => rpc('saveTransaction',{...fields,id:editing?.id || "",version:editing?.version || "",requestId}),
     'Transaksi tersimpan.', fields.date.slice(0,7));
 };
@@ -1122,6 +1154,52 @@ function renderDashboardSummary(revenue, totalFee, profit) {
 for (const button of document.querySelectorAll('[data-overview-go]')) {
   button.onclick = () => setPage(button.dataset.overviewGo);
 }
+
+const SERVICE_OPTIONS = [
+  'Edit Kerapihan', 'Daftar Pustaka Mendeley', 'Pembuatan Daftar isi',
+  'Pembuatan PPT', 'Konversi Skripsi', 'Pengetikan', 'Penomoran Halaman',
+  'Jasa Desain', 'Pemisahan File', 'Perbaikan Typo', 'Lainnya'
+];
+let servicesChanged = false;
+function setupServiceChoices(record) {
+  const stored = record ? String(record.service || '') : '';
+  const parts = stored.split(' • ');
+  const chosen = parts.filter(part => SERVICE_OPTIONS.includes(part));
+  const other = parts.filter(part => !SERVICE_OPTIONS.includes(part))
+    .map(part => part.startsWith('Lainnya: ') ? part.slice(9) : part).join(' • ');
+  if (other) chosen.push('Lainnya');
+  $('serviceChoices').replaceChildren(...SERVICE_OPTIONS.map(name => {
+    const label = node('label',undefined,'service-option');
+    const input = document.createElement('input');
+    input.type = 'checkbox';
+    input.name = 'services';
+    input.value = name;
+    input.checked = chosen.includes(name);
+    label.append(input,node('span',name));
+    return label;
+  }));
+  $('otherService').value = other;
+  form.elements.service.value = stored;
+  servicesChanged = false;
+  updateOtherService();
+  const select = form.elements.method;
+  select.replaceChildren(
+    Object.assign(node('option','Pilih metode bayar'),{value:''}),
+    ...['Shopeepay','BCA'].map(value => Object.assign(node('option',value),{value}))
+  );
+  const legacy = record ? String(record.method || '') : '';
+  if (legacy && !['Shopeepay','BCA'].includes(legacy)) {
+    select.append(Object.assign(node('option',legacy + ' (data lama)'),{value:legacy}));
+  }
+  select.value = legacy;
+}
+function updateOtherService() {
+  const checked = [...$('serviceChoices').querySelectorAll('input:checked')];
+  $('otherServiceLabel').hidden = !checked.some(input => input.value === 'Lainnya');
+  $('serviceError').textContent = '';
+}
+$('serviceChoices').onchange = () => {servicesChanged = true; updateOtherService();};
+$('otherService').oninput = () => {servicesChanged = true;};
 
 load();
 </script>
