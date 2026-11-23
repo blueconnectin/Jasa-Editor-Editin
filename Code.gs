@@ -134,7 +134,9 @@ function readApp() {
     }));
     const editors = rows_(sheet_(tx.getParent(), 'Daftar Editor', ['Nama Editor']), 1)
       .map(row => String(row[0]).trim()).filter(Boolean);
-    return {records, editors, costs: Object.fromEntries(rows_(costs, COST.length)), today: Utilities.formatDate(new Date(), ZONE, 'yyyy-MM-dd')};
+    const withdrawals = withdrawals_(withdrawalSheet_(tx.getParent()));
+    const wallets = wallets_(rows_(tx, TX.length), withdrawals, editors);
+    return {records, editors, withdrawals, wallets, costs: Object.fromEntries(rows_(costs, COST.length)), today: Utilities.formatDate(new Date(), ZONE, 'yyyy-MM-dd')};
   });
 }
 
@@ -189,5 +191,124 @@ function saveCosts(period, amount) {
     const [, sheet] = tables_();
     const index = rows_(sheet, COST.length).findIndex(row => row[0] === period);
     sheet.getRange(index < 0 ? sheet.getLastRow() + 1 : index + 2, 1, 1, 2).setValues([[period,value]]);
+  });
+}
+
+// Pengambilan disimpan sebagai riwayat. Pembatalan mempertahankan catatan asli.
+const WITHDRAWAL_HEADERS = [
+  'ID', 'Tanggal', 'Akun', 'Jumlah', 'Keterangan',
+  'Dibuat', 'Dibatalkan', 'Alasan pembatalan'
+];
+const ALLOCATION_ACCOUNTS = [
+  ['Investasi', 3], ['Dana darurat', 3], ['Iklan', 10],
+  ['Infaq', 2], ['Mumu', 41], ['Hilmi', 10], ['Gina', 31]
+];
+
+function cents_(amount) {
+  return Math.round((Number(amount) + Number.EPSILON) * 100);
+}
+
+function withdrawalSheet_(book) {
+  return sheet_(book, 'Pengambilan App', WITHDRAWAL_HEADERS);
+}
+
+function withdrawals_(sheet) {
+  return rows_(sheet, WITHDRAWAL_HEADERS.length).filter(row => row[0]).map(row => ({
+    id: String(row[0]), date: String(row[1]), account: String(row[2]),
+    amount: Number(row[3]), note: String(row[4]), created: String(row[5]),
+    cancelled: row[6] === true, reason: String(row[7])
+  }));
+}
+
+function wallets_(transactions, withdrawals, editors) {
+  const active = transactions.filter(row => row[0] && !row[13]);
+  let revenue = 0;
+  let fees = 0;
+  const editorFees = new Map(editors.map(name => [name, 0]));
+  for (const row of active) {
+    revenue += cents_(row[5]);
+    const fee = row[6] ? cents_(Number(row[5]) * Number(row[6]) / 100) : 0;
+    fees += fee;
+    editorFees.set(String(row[3]), (editorFees.get(String(row[3])) || 0) + fee);
+  }
+  const basis = Math.max(revenue - fees, 0);
+  let distributed = 0;
+  const accounts = ALLOCATION_ACCOUNTS.map(([name, percent], index) => {
+    const income = index === ALLOCATION_ACCOUNTS.length - 1
+      ? basis - distributed : Math.round(basis * percent / 100);
+    distributed += income;
+    return {id: 'alokasi:' + name, name, type: 'Alokasi hasil usaha', income};
+  });
+  for (const [name, income] of editorFees) {
+    accounts.push({id: 'editor:' + name, name, type: 'Fee editor', income});
+  }
+  // Akun lama tetap terlihat walaupun nama editornya sudah diubah.
+  for (const entry of withdrawals) {
+    if (!accounts.some(account => account.id === entry.account)) {
+      accounts.push({
+        id: entry.account, name: entry.account.replace(/^editor:/, ''),
+        type: 'Fee editor', income: 0
+      });
+    }
+  }
+  const used = new Map();
+  for (const entry of withdrawals.filter(entry => !entry.cancelled)) {
+    used.set(entry.account, (used.get(entry.account) || 0) + cents_(entry.amount));
+  }
+  return accounts.map(account => ({
+    ...account, income: account.income / 100,
+    withdrawn: (used.get(account.id) || 0) / 100,
+    balance: (account.income - (used.get(account.id) || 0)) / 100
+  }));
+}
+
+function saveWithdrawal(input) {
+  const id = String(input.requestId || '');
+  const date = String(input.date || '');
+  const account = String(input.account || '');
+  const amount = Number(input.amount);
+  const note = safe_(input.note);
+  const today = Utilities.formatDate(new Date(), ZONE, 'yyyy-MM-dd');
+  if (!/^[a-f0-9-]{36}$/i.test(id) || !validDate_(date) || date > today ||
+      !Number.isFinite(amount) || amount <= 0 || amount > 1e12 ||
+      Math.abs(amount * 100 - Math.round(amount * 100)) > 0.001 ||
+      !note || note.length > 1001) {
+    throw new Error('Isi tanggal hingga hari ini, jumlah positif, dan keterangan pengambilan.');
+  }
+  return locked_(() => {
+    const [tx] = tables_();
+    const sheet = withdrawalSheet_(tx.getParent());
+    const entries = withdrawals_(sheet);
+    const existing = entries.find(entry => entry.id === id);
+    if (existing) {
+      if (existing.account !== account || existing.amount !== amount ||
+          existing.date !== date || existing.note !== note) {
+        throw new Error('Permintaan ini sudah tersimpan. Muat ulang riwayat.');
+      }
+      return id;
+    }
+    const accounts = wallets_(rows_(tx, TX.length), entries, []);
+    const selected = accounts.find(item => item.id === account);
+    if (!selected || cents_(amount) > cents_(selected.balance)) {
+      throw new Error('Saldo tidak mencukupi. Muat ulang untuk melihat saldo terbaru.');
+    }
+    sheet.getRange(sheet.getLastRow() + 1, 1, 1, WITHDRAWAL_HEADERS.length).setValues([[
+      id, date, account, amount, note, new Date().toISOString(), false, ''
+    ]]);
+    return id;
+  });
+}
+
+function cancelWithdrawal(id, reason) {
+  const note = safe_(reason);
+  if (!note || note.length > 1001) throw new Error('Isi alasan pembatalan.');
+  return locked_(() => {
+    const [tx] = tables_();
+    const sheet = withdrawalSheet_(tx.getParent());
+    const entries = rows_(sheet, WITHDRAWAL_HEADERS.length);
+    const index = entries.findIndex(row => row[0] === id);
+    if (index < 0) throw new Error('Catatan pengambilan tidak ditemukan.');
+    if (entries[index][6] === true) return;
+    sheet.getRange(index + 2, 7, 1, 2).setValues([[true, note]]);
   });
 }
