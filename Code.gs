@@ -1,3 +1,4 @@
+const MIGRATION_START = '2026-03-01';
 const TX = ['ID','Periode','Tanggal','Editor','Jasa','Harga','Tarif %','Metode bayar','Status bayar','Catatan','Perlu ditinjau','Baris Excel','Versi','Diarsipkan'];
 const COST = ['Periode','Biaya lain'];
 const ZONE = 'Asia/Jakarta';
@@ -72,7 +73,7 @@ function setup() {
           source.getRange(3, 1, source.getLastRow() - 2, 10).getValues(),
           source.getRange(3, 1, source.getLastRow() - 2, 10).getFormulas(),
           book.getSpreadsheetTimeZone()
-        ).filter(row => !existing.has(row[0]))
+        ).filter(row => !existing.has(row[0]) && String(row[1]) >= MIGRATION_START.slice(0,7))
       : [];
     const names = new Set(rows_(editorSheet, 1).map(row => row[0]));
     const newNames = [...new Set(pending.map(row => row[3]))].filter(name => !names.has(name));
@@ -127,16 +128,17 @@ function safe_(value) {
 function readApp() {
   return locked_(() => {
     const [tx, costs] = tables_();
-    const records = rows_(tx, TX.length).filter(row => row[0] && !row[13]).map(row => ({
+    const records = migrationTransactions_(rows_(tx, TX.length)).filter(row => row[0] && !row[13]).map(row => ({
       id: row[0], period: row[1], date: row[2], editor: row[3], service: row[4], price: row[5],
       rate: row[6], method: row[7], status: row[8], note: row[9], issue: row[10],
       source: row[11], version: row[12]
     }));
     const editors = rows_(sheet_(tx.getParent(), 'Daftar Editor', ['Nama Editor']), 1)
       .map(row => String(row[0]).trim()).filter(Boolean);
-    const withdrawals = withdrawals_(withdrawalSheet_(tx.getParent()));
-    const wallets = wallets_(rows_(tx, TX.length), withdrawals, editors);
-    return {records, editors, withdrawals, wallets, paymentBalances: paymentBalances_(rows_(tx, TX.length), withdrawals), costs: Object.fromEntries(rows_(costs, COST.length)), today: Utilities.formatDate(new Date(), ZONE, 'yyyy-MM-dd')};
+    const withdrawals = migrationWithdrawals_(withdrawals_(withdrawalSheet_(tx.getParent())));
+    const opening = openingBalances_(tx.getParent());
+    const wallets = wallets_(rows_(tx, TX.length), withdrawals, editors, opening.balances);
+    return {records, editors, withdrawals, wallets, opening, migrationStart:MIGRATION_START, paymentBalances: paymentBalances_(rows_(tx, TX.length), withdrawals, opening.balances), costs: Object.fromEntries(rows_(costs, COST.length)), today: Utilities.formatDate(new Date(), ZONE, 'yyyy-MM-dd')};
   });
 }
 
@@ -165,7 +167,7 @@ function saveTransaction(input) {
   const method = safe_(input.method);
   const note = safe_(input.note);
   const status = String(input.status);
-  if (!validDate_(date) || !editor || !service || String(input.price ?? '').trim() === '' ||
+  if (!validDate_(date) || date < MIGRATION_START || !editor || !service || String(input.price ?? '').trim() === '' ||
       !Number.isFinite(price) || price < 0 || price > 1e12 || ![60,70,80].includes(rate) ||
       !['Lunas','Belum bayar','Belum diketahui'].includes(status) ||
       editor.length > 151 || service.length > 501 || method.length > 151 || note.length > 2001) {
@@ -246,8 +248,9 @@ function withdrawals_(sheet) {
   }));
 }
 
-function wallets_(transactions, withdrawals, editors) {
-  const active = transactions.filter(row => row[0] && !row[13]);
+function wallets_(transactions, withdrawals, editors, opening = {}) {
+  withdrawals = migrationWithdrawals_(withdrawals);
+  const active = migrationTransactions_(transactions).filter(row => row[0] && !row[13]);
   let revenue = 0;
   let fees = 0;
   const editorFees = new Map(editors.map(name => [name, 0]));
@@ -277,14 +280,19 @@ function wallets_(transactions, withdrawals, editors) {
       });
     }
   }
+  for (const id of Object.keys(opening).filter(id => id.startsWith('editor:'))) {
+    if (!accounts.some(account => account.id === id)) {
+      accounts.push({id, name:id.slice(7), type:'Fee editor', income:0});
+    }
+  }
   const used = new Map();
   for (const entry of withdrawals.filter(entry => !entry.cancelled)) {
     used.set(entry.account, (used.get(entry.account) || 0) + cents_(entry.amount));
   }
   return accounts.map(account => ({
-    ...account, income: account.income / 100,
+    ...account, openingBalance:Number(opening[account.id] || 0), income: account.income / 100,
     withdrawn: (used.get(account.id) || 0) / 100,
-    balance: (account.income - (used.get(account.id) || 0)) / 100
+    balance: (cents_(opening[account.id] || 0) + account.income - (used.get(account.id) || 0)) / 100
   }));
 }
 
@@ -296,7 +304,7 @@ function saveWithdrawal(input) {
   const note = safe_(input.note);
   const method = String(input.method || '');
   const today = Utilities.formatDate(new Date(), ZONE, 'yyyy-MM-dd');
-  if (!/^[a-f0-9-]{36}$/i.test(id) || !validDate_(date) || date > today ||
+  if (!/^[a-f0-9-]{36}$/i.test(id) || !validDate_(date) || date < MIGRATION_START || date > today ||
       !Number.isFinite(amount) || amount <= 0 || amount > 1e12 ||
       Math.abs(amount * 100 - Math.round(amount * 100)) > 0.001 ||
       !note || note.length > 1001 || !['Shopeepay','BCA'].includes(method)) {
@@ -314,11 +322,12 @@ function saveWithdrawal(input) {
       }
       return id;
     }
-    const source = paymentBalances_(rows_(tx, TX.length), entries).accounts.find(item => item.method === method);
+    const opening = openingBalances_(tx.getParent()).balances;
+    const source = paymentBalances_(rows_(tx, TX.length), entries, opening).accounts.find(item => item.method === method);
     if (cents_(amount) > cents_(source.balance)) {
       throw new Error('Saldo ' + method + ' tidak mencukupi. Periksa rekap metode bayar.');
     }
-    const accounts = wallets_(rows_(tx, TX.length), entries, []);
+    const accounts = wallets_(rows_(tx, TX.length), entries, [], opening);
     const selected = accounts.find(item => item.id === account);
     if (!selected || cents_(amount) > cents_(selected.balance)) {
       throw new Error('Saldo tidak mencukupi. Muat ulang untuk melihat saldo terbaru.');
@@ -351,7 +360,9 @@ function paymentMethod_(value) {
   return '';
 }
 
-function paymentBalances_(transactions, withdrawals) {
+function paymentBalances_(transactions, withdrawals, opening = {}) {
+  transactions = migrationTransactions_(transactions);
+  withdrawals = migrationWithdrawals_(withdrawals);
   const accounts = ['Shopeepay','BCA'].map(method => ({method, income:0, withdrawn:0, balance:0}));
   let unknownIncome = 0;
   let unknownWithdrawn = 0;
@@ -370,8 +381,8 @@ function paymentBalances_(transactions, withdrawals) {
   }
   return {
     accounts: accounts.map(account => ({
-      method:account.method, income:account.income/100,
-      withdrawn:account.withdrawn/100, balance:(account.income-account.withdrawn)/100
+      method:account.method, openingBalance:Number(opening['method:' + account.method] || 0), income:account.income/100,
+      withdrawn:account.withdrawn/100, balance:(cents_(opening['method:' + account.method] || 0)+account.income-account.withdrawn)/100
     })),
     unknownIncome:unknownIncome/100, unknownWithdrawn:unknownWithdrawn/100
   };
@@ -390,5 +401,65 @@ function assignWithdrawalMethod(id, method) {
       throw new Error('Sumber dana sudah diisi. Muat ulang riwayat.');
     }
     sheet.getRange(index + 2, 9).setValue(method);
+  });
+}
+
+const OPENING_HEADERS = ['Akun','Saldo awal','Versi','Diubah'];
+
+function migrationTransactions_(rows) {
+  return rows.filter(row => String(row[1]) >= MIGRATION_START.slice(0,7));
+}
+
+function migrationWithdrawals_(entries) {
+  return entries.filter(entry => entry.date >= MIGRATION_START);
+}
+
+function openingBalances_(book) {
+  const sheet = sheet_(book, 'Saldo Awal App', OPENING_HEADERS);
+  const rows = rows_(sheet, OPENING_HEADERS.length).filter(row => row[0]);
+  return {
+    balances:Object.fromEntries(rows.map(row => [String(row[0]),Number(row[1]) || 0])),
+    version:rows.length ? String(rows[0][2]) : '',
+    configured:rows.length > 0
+  };
+}
+
+function saveOpeningBalances(input) {
+  if (!input || !Array.isArray(input.entries) || input.entries.length > 1000) {
+    throw new Error('Daftar saldo awal tidak valid.');
+  }
+  return locked_(() => {
+    const [tx] = tables_();
+    const book = tx.getParent();
+    const existing = openingBalances_(book);
+    if (String(input.version || '') !== existing.version) {
+      throw new Error('Saldo awal telah diperbarui. Muat ulang sebelum menyimpan.');
+    }
+    const editors = rows_(sheet_(book, 'Daftar Editor', ['Nama Editor']),1)
+      .map(row => String(row[0]).trim()).filter(Boolean);
+    const entries = withdrawals_(withdrawalSheet_(book));
+    const accounts = wallets_(rows_(tx,TX.length),entries,editors,existing.balances);
+    const allowed = new Set([...accounts.map(account => account.id),'method:BCA','method:Shopeepay']);
+    const balances = {...existing.balances};
+    const seen = new Set();
+    for (const entry of input.entries) {
+      const amount = Number(entry.amount);
+      if (!allowed.has(entry.id) || seen.has(entry.id) ||
+          String(entry.amount ?? '').trim() === '' || !Number.isFinite(amount) ||
+          amount < 0 || amount > 1e12 ||
+          Math.abs(amount * 100 - Math.round(amount * 100)) > 0.001) {
+        throw new Error('Isi saldo awal positif atau nol, maksimal dua angka desimal.');
+      }
+      seen.add(entry.id);
+      balances[entry.id] = amount;
+    }
+    const version = Utilities.getUuid();
+    const now = new Date().toISOString();
+    const rows = Object.entries(balances).sort(([a],[b]) => a.localeCompare(b))
+      .map(([id,amount]) => [id,amount,version,now]);
+    if (!rows.length) throw new Error('Isi minimal satu akun saldo awal.');
+    const sheet = sheet_(book, 'Saldo Awal App', OPENING_HEADERS);
+    sheet.getRange(2,1,rows.length,OPENING_HEADERS.length).setValues(rows);
+    return version;
   });
 }
