@@ -459,7 +459,7 @@ label.service-option{display:flex;align-items:center;gap:10px;font-size:15px;col
 </section>
 
 <section class="panel" id="transactionsPanel"><h2 id="tableTitle">Transaksi</h2><div class="scroll"><table>
-<thead><tr><th>Tanggal</th><th>Nama editor</th><th>Jasa</th><th>Harga</th><th>Biaya jasa</th><th>Pembayaran</th><th>Aksi</th></tr></thead>
+<thead><tr><th>Tanggal</th><th>Nama editor</th><th>Jasa</th><th>Harga</th><th>Biaya jasa</th><th>Metode bayar</th><th>Aksi</th></tr></thead>
 <tbody id="records"></tbody></table></div><p id="empty" hidden>Belum ada transaksi untuk filter ini.</p></section>
 <section id="walletSection" class="wallet-section">
   <div class="section-heading">
@@ -676,8 +676,7 @@ function render(resetCost = false) {
     if (r.issue) date.append(node('small','Tinjau · Excel ' + r.source,'warning'));
     const service = node('td',r.service,'service');
     if (r.note) service.append(node('small',r.note));
-    const payment = node('td',r.status);
-    if (r.method) payment.append(node('small',r.method));
+    const payment = node('td',r.method || '—');
     const change = node('button','Edit');
     change.onclick = () => openForm(r);
     const action = node('td');
