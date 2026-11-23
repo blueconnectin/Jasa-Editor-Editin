@@ -348,6 +348,48 @@ td button{font-size:14px}
  .app-nav button{font-size:12px}
 }
 
+.balance-tabs{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:20px}
+.balance-tabs button{background:white;color:#354b69;border:1px solid #c7d3e5;padding:10px 18px;font-size:16px;min-height:46px}
+.balance-tabs button[aria-pressed="true"]{background:#234ecb;color:white;border-color:#234ecb}
+.balance-tabs button[aria-pressed="true"]:hover{background:#1c40ad;color:white}
+#balanceGroupHeader{display:flex;justify-content:space-between;align-items:center;margin:0 0 15px}
+#walletGroupCaption{font-size:15px;font-weight:600;color:#354b69;margin:0}
+#walletOverview{margin-bottom:22px}
+#wallets{display:block;background:white;border:1px solid #d5deeb;border-radius:14px;overflow:hidden}
+.balance-desktop{width:100%;overflow-x:auto}
+.balance-table{width:100%;min-width:790px;border-collapse:collapse}
+.balance-caption{padding:18px 20px;text-align:left;font-size:16px;font-weight:600;color:#243a59}
+.balance-table th{font-size:14px;white-space:nowrap;background:#f0f4fa;padding:14px 18px}
+.balance-table td{font-size:16px;padding:18px;vertical-align:middle}
+.balance-table th:nth-child(2),.balance-table th:nth-child(3),.balance-table th:nth-child(4),
+.balance-table td:nth-child(2),.balance-table td:nth-child(3),.balance-table td:nth-child(4){text-align:right;font-variant-numeric:tabular-nums}
+.balance-value{font-size:18px!important;font-weight:700;white-space:nowrap}
+.balance-actions{display:flex;gap:8px;flex-wrap:nowrap}
+.balance-actions button{padding:8px 13px;font-size:15px;min-height:42px;color:#2349b3;border-color:#bbcbe5}
+.balance-actions button:first-child{background:#edf2ff}
+.balance-actions button:disabled{color:#59697e;background:#f3f5f8}
+.balance-mobile{display:none}
+.balance-empty{padding:24px;font-size:16px}
+body[data-view="withdrawals"] #balanceGroupHeader{display:none}
+.balance-details{border:0;background:transparent;border-radius:0;box-shadow:none;padding:0;margin:14px 0 0}
+.balance-details summary{display:block;font-size:15px;color:#2349b3;padding:8px 0;font-weight:550}
+.balance-details summary::after{content:' ＋'}
+.balance-details[open] summary::after{content:' −'}
+.balance-detail-row{display:flex;justify-content:space-between;gap:12px;padding:7px 0;font-size:15px;color:#354b69}
+@media(max-width:780px){
+ .balance-desktop{display:none}.balance-mobile{display:block}
+ #wallets{background:transparent;border:0;border-radius:0;overflow:visible}
+ .balance-list-item{background:white;border:1px solid #cfdbea;border-radius:12px;padding:18px;margin-bottom:12px}
+ .balance-list-item h3{font-size:18px;margin:0 0 13px;font-weight:650}
+ .balance-label{display:block;font-size:14px;color:#425672}
+ .balance-mobile-amount{font-size:26px;display:block;margin:4px 0 16px;overflow-wrap:anywhere}
+ .balance-actions button{font-size:16px;min-height:44px}
+ .balance-tabs{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px}
+ .balance-tabs button{padding:10px 5px;font-size:14px}
+ #walletFilters{display:block}
+ #walletFilters input{width:100%}
+}
+
 </style>
 </head>
 <body data-view="overview">
@@ -415,9 +457,14 @@ td button{font-size:14px}
     <button id="withdraw" class="primary" disabled>Catat pengambilan</button>
   </div>
   <p class="wallet-notice">Saldo mengikuti seluruh transaksi tercatat, termasuk pembayaran yang statusnya belum diketahui. Koreksi transaksi akan memperbarui saldo.</p>
+  <div id="balanceGroupHeader"><p id="walletGroupCaption"></p></div>
   <div class="wallet-overview" id="walletOverview"></div>
   <div class="tools" id="walletFilters">
-    <label>Jenis saldo<select id="walletType"><option value="">Semua jenis</option><option>Alokasi hasil usaha</option><option>Fee editor</option></select></label>
+    <div class="balance-tabs" role="group" aria-label="Jenis saldo">
+    <button type="button" data-wallet-group="business" aria-pressed="true">Dana usaha</button>
+    <button type="button" data-wallet-group="shares" aria-pressed="false">Bagi hasil</button>
+    <button type="button" data-wallet-group="editors" aria-pressed="false">Fee editor</button>
+    </div>
     <label class="search">Cari akun<input id="walletSearch" type="search" placeholder="Nama orang atau komponen"></label>
   </div>
   <div id="wallets" class="wallet-grid"></div>
@@ -699,42 +746,109 @@ function accountLabel(account) {
   return account.name + ' · ' + account.type;
 }
 
+let walletGroup = 'business';
+
+function walletCategory(account) {
+  if (account.type === 'Fee editor') return 'editors';
+  return ['alokasi:Mumu','alokasi:Hilmi','alokasi:Gina'].includes(account.id)
+    ? 'shares' : 'business';
+}
+
+function openAccountHistory(accountId) {
+  $('historyAccount').value = accountId;
+  $('historyFrom').value = '';
+  $('historyTo').value = '';
+  $('historyStatus').value = '';
+  renderHistory();
+  setPage('withdrawals');
+}
+
+function walletActions(account) {
+  const actions = node('div',undefined,'balance-actions');
+  const take = node('button','Ambil');
+  take.disabled = account.balance <= 0;
+  take.setAttribute('aria-label','Ambil saldo ' + account.name);
+  take.onclick = () => openWithdrawal(account.id);
+  const history = node('button','Riwayat');
+  history.setAttribute('aria-label','Riwayat ' + account.name);
+  history.onclick = () => openAccountHistory(account.id);
+  actions.append(take,history);
+  return actions;
+}
+
 function renderWallets() {
   const wallets = data.wallets || [];
   $('withdraw').disabled = !wallets.some(account => account.balance > 0);
-  const total = key => round(wallets.reduce((sum, account) => sum + account[key], 0));
+  const groupNames = {business:'Dana usaha',shares:'Bagi hasil',editors:'Fee editor'};
+  const grouped = wallets.filter(account => walletCategory(account) === walletGroup);
+  const total = key => round(grouped.reduce((sum, account) => sum + account[key],0));
+  $('walletGroupCaption').textContent = groupNames[walletGroup] + ' · Seluruh periode';
+  for (const button of document.querySelectorAll('[data-wallet-group]')) {
+    button.setAttribute('aria-pressed',String(button.dataset.walletGroup === walletGroup));
+  }
   $('walletOverview').replaceChildren(...[
-    ['Pendapatan dialokasikan', total('income')],
-    ['Total pengambilan', total('withdrawn')],
-    ['Saldo tersisa', total('balance')]
+    ['Total pendapatan',total('income')],
+    ['Total pengambilan',total('withdrawn')],
+    ['Saldo tersedia',total('balance')]
   ].map(([label, amount]) => {
     const item = node('div');
     item.append(node('small',label),node('strong',money(amount)));
     return item;
   }));
   const search = $('walletSearch').value.trim().toLocaleLowerCase('id');
-  const type = $('walletType').value;
-  const accounts = wallets.filter(account => (!type || account.type === type) &&
-    account.name.toLocaleLowerCase('id').includes(search));
-  $('wallets').replaceChildren(...accounts.map(account => {
-    const card = node('article',undefined,'wallet-card');
-    const heading = node('div',undefined,'wallet-heading');
-    heading.append(node('span',account.type,'wallet-kind'),node('span',account.name.slice(0,1),'avatar'));
-    const amount = node('strong',money(account.balance),'wallet-amount');
+  const accounts = grouped.filter(account => account.name.toLocaleLowerCase('id').includes(search))
+    .sort((a,b) => a.name.localeCompare(b.name,'id'));
+
+  const table = node('table',undefined,'balance-table');
+  const caption = node('caption',groupNames[walletGroup] + ' · Saldo seluruh periode');
+  caption.className = 'balance-caption';
+  const head = node('thead');
+  const headings = node('tr');
+  for (const label of ['Akun','Pendapatan','Diambil','Saldo tersedia','Aksi']) {
+    const th = node('th',label);
+    th.scope = 'col';
+    headings.append(th);
+  }
+  head.append(headings);
+  const body = node('tbody');
+  const mobile = node('div',undefined,'balance-mobile');
+  for (const account of accounts) {
+    const row = node('tr');
+    const name = node('td',account.name);
+    const balance = node('td',money(account.balance),'balance-value');
+    if (account.balance < 0) {
+      balance.classList.add('error');
+      name.append(node('small','Saldo minus setelah koreksi pendapatan.','error'));
+    }
+    const actions = node('td');
+    actions.append(walletActions(account));
+    row.append(name,node('td',money(account.income),'money'),
+      node('td',money(account.withdrawn),'money'),balance,actions);
+    body.append(row);
+
+    const card = node('article',undefined,'balance-list-item');
+    card.append(node('h3',account.name));
+    const amount = node('strong',money(account.balance),'balance-mobile-amount');
     if (account.balance < 0) amount.classList.add('error');
-    card.append(heading,node('h3',account.name),amount);
-    const detail = node('div',undefined,'wallet-detail');
-    detail.append(node('span','Masuk ' + money(account.income)),
-      node('span','Diambil ' + money(account.withdrawn)));
-    card.append(detail);
+    card.append(node('span','Saldo tersedia','balance-label'),amount,walletActions(account));
+    const details = node('details',undefined,'balance-details');
+    const summary = node('summary','Rincian pendapatan');
+    const income = node('div',undefined,'balance-detail-row');
+    income.append(node('span','Pendapatan'),node('strong',money(account.income)));
+    const taken = node('div',undefined,'balance-detail-row');
+    taken.append(node('span','Diambil'),node('strong',money(account.withdrawn)));
+    details.append(summary,income,taken);
+    card.append(details);
     if (account.balance < 0) card.append(node('p','Saldo minus setelah koreksi pendapatan.','error'));
-    const action = node('button','Ambil saldo');
-    action.disabled = account.balance <= 0;
-    action.onclick = () => openWithdrawal(account.id);
-    card.append(action);
-    return card;
-  }));
-  if (!accounts.length) $('wallets').append(node('p','Akun belum tersedia untuk filter ini.'));
+    mobile.append(card);
+  }
+  table.append(caption,head,body);
+  const desktop = node('div',undefined,'balance-desktop');
+  desktop.append(table);
+  $('wallets').replaceChildren(desktop,mobile);
+  if (!accounts.length) {
+    $('wallets').replaceChildren(node('p','Tidak ada akun untuk pencarian ini.','balance-empty'));
+  }
   renderHistory();
   updatePageHeading();
 }
@@ -855,7 +969,12 @@ $('cancelForm').onsubmit = async event => {
     $('cancelSave').disabled = $('cancelBack').disabled = false;
   }
 };
-$('walletType').onchange = renderWallets;
+for (const button of document.querySelectorAll('[data-wallet-group]')) {
+  button.onclick = () => {
+    walletGroup = button.dataset.walletGroup;
+    renderWallets();
+  };
+}
 $('walletSearch').oninput = renderWallets;
 for (const id of ['historyAccount','historyFrom','historyTo','historyStatus']) {
   $(id).onchange = renderHistory;
