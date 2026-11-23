@@ -428,6 +428,7 @@ body[data-view="withdrawals"] #openingSection{display:none}
 .balance-table td:nth-child(4){font-weight:400;font-size:16px!important}
 @media(max-width:780px){#walletOverview{grid-template-columns:repeat(2,minmax(0,1fr))}.opening-field{grid-template-columns:minmax(0,1fr)}}
 @media(max-width:380px){#walletOverview{grid-template-columns:minmax(0,1fr)}}
+.delete-transaction{color:#a12e25;border-color:#dfb4b0;margin-left:6px}
 </style>
 </head>
 <body data-view="overview">
@@ -598,7 +599,7 @@ body[data-view="withdrawals"] #openingSection{display:none}
 <label class="wide" hidden>Catatan <textarea name="note" rows="2" maxlength="2000"></textarea></label>
 </div>
 <p id="estimate"></p><p id="formError" class="error" role="alert"></p>
-<div class="actions"><button class="archive" type="button" id="archive">Arsipkan</button><button type="button" id="cancel">Batal</button><button class="primary" id="save">Simpan transaksi</button></div>
+<div class="actions"><button class="archive" type="button" id="archive">Hapus transaksi</button><button type="button" id="cancel">Batal</button><button class="primary" id="save">Simpan transaksi</button></div>
 </form>
 </dialog>
 <datalist id="editorNames"></datalist><datalist id="services"></datalist><datalist id="methods"></datalist>
@@ -736,7 +737,10 @@ function render(resetCost = false) {
     const change = node('button','Edit');
     change.onclick = () => openForm(r);
     const action = node('td');
-    action.append(change);
+    const remove = node('button','Hapus','delete-transaction');
+    remove.setAttribute('aria-label','Hapus transaksi ' + r.editor + ' ' + (r.date || 'tanpa tanggal'));
+    remove.onclick = () => deleteTransaction(r);
+    action.append(change,remove);
     const commission = fee(r);
     row.append(date,node('td',r.editor),service,node('td',money(r.price),'money'),
       node('td',commission === null ? 'Perlu tarif' : money(commission) + ' · ' + r.rate + '%','money'),payment,action);
@@ -776,7 +780,8 @@ async function mutate(action, notice, newPeriod) {
     if (newPeriod && $('scope').value === 'month') $('period').value = newPeriod;
     await load(notice);
   } catch(error) {
-    $('formError').textContent = error.message || String(error);
+    if ($('dialog').open) $('formError').textContent = error.message || String(error);
+    else message(error.message || String(error),true);
   } finally {
     busy = false;
     for (const button of [$('save'),$('archive'),$('cancel')]) button.disabled = false;
@@ -800,11 +805,13 @@ form.onsubmit = event => {
   mutate(() => rpc('saveTransaction',{...fields,id:editing?.id || "",version:editing?.version || "",requestId}),
     'Transaksi tersimpan.', fields.date.slice(0,7));
 };
-$('archive').onclick = () => {
-  if (editing && confirm('Arsipkan transaksi ini? Transaksi akan dikeluarkan dari rekap.')) {
-    mutate(() => rpc('archiveTransaction',editing.id,editing.version),'Transaksi diarsipkan.');
+function deleteTransaction(record) {
+  if (busy || !record) return;
+  if (confirm('Hapus transaksi ' + record.editor + ' · ' + money(record.price) + '? Rekap dan saldo akan dihitung ulang.')) {
+    mutate(() => rpc('archiveTransaction',record.id,record.version),'Transaksi berhasil dihapus.');
   }
-};
+}
+$('archive').onclick = () => deleteTransaction(editing);
 $('cancel').onclick = () => $('dialog').close();
 $('dialog').addEventListener('cancel',event => { if (busy) event.preventDefault(); });
 $('costForm').onsubmit = async event => {
