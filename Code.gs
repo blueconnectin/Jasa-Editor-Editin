@@ -145,7 +145,23 @@ function saveTransaction(input) {
   const price = Number(input.price);
   const rate = Number(input.rate);
   const editor = safe_(input.editor);
-  const service = safe_(input.service);
+  let service = safe_(input.service);
+  if (input.services !== undefined) {
+    const allowed = [
+      'Edit Kerapihan', 'Daftar Pustaka Mendeley', 'Pembuatan Daftar isi',
+      'Pembuatan PPT', 'Konversi Skripsi', 'Pengetikan', 'Penomoran Halaman',
+      'Jasa Desain', 'Pemisahan File', 'Perbaikan Typo', 'Lainnya'
+    ];
+    if (!Array.isArray(input.services) || !input.services.length ||
+        input.services.some(value => !allowed.includes(value))) {
+      throw new Error('Pilih minimal satu jenis jasa yang tersedia.');
+    }
+    const selected = [...new Set(input.services)];
+    const other = String(input.otherService || '').trim();
+    service = safe_(selected.map(value =>
+      value === 'Lainnya' && other ? 'Lainnya: ' + other : value
+    ).join(' • '));
+  }
   const method = safe_(input.method);
   const note = safe_(input.note);
   const status = String(input.status);
@@ -165,6 +181,9 @@ function saveTransaction(input) {
     if (old && !input.id) return id;
     if (input.id && (!old || old[13] || old[12] !== input.version)) {
       throw new Error('Transaksi sudah berubah. Muat ulang sebelum menyimpan.');
+    }
+    if (!['Shopeepay','BCA'].includes(method) && !(old && safe_(old[7]) === method)) {
+      throw new Error('Pilih metode bayar Shopeepay atau BCA.');
     }
     const record = [id, date.slice(0, 7), date, editor, service, price, rate, method,
       status, note, '', old ? old[11] : '', Utilities.getUuid(), false];
