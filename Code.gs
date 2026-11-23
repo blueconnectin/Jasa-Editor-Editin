@@ -136,7 +136,7 @@ function readApp() {
       .map(row => String(row[0]).trim()).filter(Boolean);
     const withdrawals = withdrawals_(withdrawalSheet_(tx.getParent()));
     const wallets = wallets_(rows_(tx, TX.length), withdrawals, editors);
-    return {records, editors, withdrawals, wallets, costs: Object.fromEntries(rows_(costs, COST.length)), today: Utilities.formatDate(new Date(), ZONE, 'yyyy-MM-dd')};
+    return {records, editors, withdrawals, wallets, paymentBalances: paymentBalances_(rows_(tx, TX.length), withdrawals), costs: Object.fromEntries(rows_(costs, COST.length)), today: Utilities.formatDate(new Date(), ZONE, 'yyyy-MM-dd')};
   });
 }
 
@@ -216,7 +216,7 @@ function saveCosts(period, amount) {
 // Pengambilan disimpan sebagai riwayat. Pembatalan mempertahankan catatan asli.
 const WITHDRAWAL_HEADERS = [
   'ID', 'Tanggal', 'Akun', 'Jumlah', 'Keterangan',
-  'Dibuat', 'Dibatalkan', 'Alasan pembatalan'
+  'Dibuat', 'Dibatalkan', 'Alasan pembatalan', 'Sumber dana'
 ];
 const ALLOCATION_ACCOUNTS = [
   ['Investasi', 3], ['Dana darurat', 3], ['Iklan', 10],
@@ -228,6 +228,13 @@ function cents_(amount) {
 }
 
 function withdrawalSheet_(book) {
+  const existing = book.getSheetByName('Pengambilan App');
+  if (existing && existing.getLastRow()) {
+    const header = existing.getRange(1,1,1,WITHDRAWAL_HEADERS.length).getValues()[0];
+    if (header.slice(0,8).join('|') === WITHDRAWAL_HEADERS.slice(0,8).join('|') && !header[8]) {
+      existing.getRange(1,9).setValue('Sumber dana');
+    }
+  }
   return sheet_(book, 'Pengambilan App', WITHDRAWAL_HEADERS);
 }
 
@@ -235,7 +242,7 @@ function withdrawals_(sheet) {
   return rows_(sheet, WITHDRAWAL_HEADERS.length).filter(row => row[0]).map(row => ({
     id: String(row[0]), date: String(row[1]), account: String(row[2]),
     amount: Number(row[3]), note: String(row[4]), created: String(row[5]),
-    cancelled: row[6] === true, reason: String(row[7])
+    cancelled: row[6] === true, reason: String(row[7]), method: String(row[8] || '')
   }));
 }
 
@@ -287,12 +294,13 @@ function saveWithdrawal(input) {
   const account = String(input.account || '');
   const amount = Number(input.amount);
   const note = safe_(input.note);
+  const method = String(input.method || '');
   const today = Utilities.formatDate(new Date(), ZONE, 'yyyy-MM-dd');
   if (!/^[a-f0-9-]{36}$/i.test(id) || !validDate_(date) || date > today ||
       !Number.isFinite(amount) || amount <= 0 || amount > 1e12 ||
       Math.abs(amount * 100 - Math.round(amount * 100)) > 0.001 ||
-      !note || note.length > 1001) {
-    throw new Error('Isi tanggal hingga hari ini, jumlah positif, dan keterangan pengambilan.');
+      !note || note.length > 1001 || !['Shopeepay','BCA'].includes(method)) {
+    throw new Error('Isi tanggal hingga hari ini, sumber dana, jumlah positif, dan keterangan pengambilan.');
   }
   return locked_(() => {
     const [tx] = tables_();
@@ -301,10 +309,14 @@ function saveWithdrawal(input) {
     const existing = entries.find(entry => entry.id === id);
     if (existing) {
       if (existing.account !== account || existing.amount !== amount ||
-          existing.date !== date || existing.note !== note) {
+          existing.date !== date || existing.note !== note || existing.method !== method) {
         throw new Error('Permintaan ini sudah tersimpan. Muat ulang riwayat.');
       }
       return id;
+    }
+    const source = paymentBalances_(rows_(tx, TX.length), entries).accounts.find(item => item.method === method);
+    if (cents_(amount) > cents_(source.balance)) {
+      throw new Error('Saldo ' + method + ' tidak mencukupi. Periksa rekap metode bayar.');
     }
     const accounts = wallets_(rows_(tx, TX.length), entries, []);
     const selected = accounts.find(item => item.id === account);
@@ -312,7 +324,7 @@ function saveWithdrawal(input) {
       throw new Error('Saldo tidak mencukupi. Muat ulang untuk melihat saldo terbaru.');
     }
     sheet.getRange(sheet.getLastRow() + 1, 1, 1, WITHDRAWAL_HEADERS.length).setValues([[
-      id, date, account, amount, note, new Date().toISOString(), false, ''
+      id, date, account, amount, note, new Date().toISOString(), false, '', method
     ]]);
     return id;
   });
@@ -329,5 +341,54 @@ function cancelWithdrawal(id, reason) {
     if (index < 0) throw new Error('Catatan pengambilan tidak ditemukan.');
     if (entries[index][6] === true) return;
     sheet.getRange(index + 2, 7, 1, 2).setValues([[true, note]]);
+  });
+}
+
+function paymentMethod_(value) {
+  const normalized = String(value || '').trim().toLowerCase();
+  if (normalized === 'bca') return 'BCA';
+  if (normalized === 'shopeepay') return 'Shopeepay';
+  return '';
+}
+
+function paymentBalances_(transactions, withdrawals) {
+  const accounts = ['Shopeepay','BCA'].map(method => ({method, income:0, withdrawn:0, balance:0}));
+  let unknownIncome = 0;
+  let unknownWithdrawn = 0;
+  for (const row of transactions.filter(row => row[0] && !row[13])) {
+    const method = paymentMethod_(row[7]);
+    const amount = cents_(row[5]);
+    const account = accounts.find(item => item.method === method);
+    if (account) account.income += amount;
+    else unknownIncome += amount;
+  }
+  for (const entry of withdrawals.filter(entry => !entry.cancelled)) {
+    const method = paymentMethod_(entry.method);
+    const account = accounts.find(item => item.method === method);
+    if (account) account.withdrawn += cents_(entry.amount);
+    else unknownWithdrawn += cents_(entry.amount);
+  }
+  return {
+    accounts: accounts.map(account => ({
+      method:account.method, income:account.income/100,
+      withdrawn:account.withdrawn/100, balance:(account.income-account.withdrawn)/100
+    })),
+    unknownIncome:unknownIncome/100, unknownWithdrawn:unknownWithdrawn/100
+  };
+}
+
+function assignWithdrawalMethod(id, method) {
+  if (!['Shopeepay','BCA'].includes(method)) throw new Error('Pilih Shopeepay atau BCA.');
+  return locked_(() => {
+    const [tx] = tables_();
+    const sheet = withdrawalSheet_(tx.getParent());
+    const rows = rows_(sheet, WITHDRAWAL_HEADERS.length);
+    const index = rows.findIndex(row => row[0] === id);
+    if (index < 0 || rows[index][6] === true) throw new Error('Pengambilan tidak ditemukan atau sudah dibatalkan.');
+    if (rows[index][8]) {
+      if (rows[index][8] === method) return;
+      throw new Error('Sumber dana sudah diisi. Muat ulang riwayat.');
+    }
+    sheet.getRange(index + 2, 9).setValue(method);
   });
 }
