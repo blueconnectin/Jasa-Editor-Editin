@@ -445,7 +445,7 @@ body[data-view="withdrawals"] #openingSection{display:none}
 <header><div><h1 id="pageTitle">Ringkasan keuangan</h1><p id="subtitle">Rekap transaksi dan fee bulanan</p></div><button class="primary" id="add" hidden disabled>+ Transaksi</button><button class="primary" id="headerWithdraw" hidden disabled>Catat pengambilan</button></header>
 <div class="tools" id="transactionTools">
 <label>Tampilan <select id="scope"><option value="month">Per bulan</option><option value="all">Semua periode</option></select></label>
-<label id="periodLabel">Periode <input type="month" id="period" min="2026-03" max="2099-12"></label>
+<label id="periodLabel">Periode <input type="month" id="period" min="2026-01" max="2099-12"></label>
 <label class="search">Cari <input id="query" type="search" placeholder="Nama editor, jasa, atau metode bayar"></label>
 <label id="statusFilter">Status bayar <select id="filter"><option value="">Semua status</option><option>Lunas</option><option>Belum bayar</option><option>Belum diketahui</option><option value="review">Perlu ditinjau</option></select></label>
 <button id="reload">Muat ulang</button>
@@ -494,14 +494,14 @@ body[data-view="withdrawals"] #openingSection{display:none}
     <div><h2>Saldo & pengambilan</h2><p>Saldo keseluruhan dari pendapatan tercatat dikurangi pengambilan.</p></div>
     <button id="withdraw" class="primary" disabled>Catat pengambilan</button>
   </div>
-  <p class="wallet-notice">Saldo mencakup saldo awal dan transaksi sejak 1 Maret 2026. Koreksi transaksi akan memperbarui saldo.</p>
+  <p class="wallet-notice">Saldo mencakup saldo awal dan transaksi sejak 1 Januari 2026. Koreksi transaksi akan memperbarui saldo.</p>
   <section id="openingSection">
-<div class="section-heading"><h2>Perhitungan sejak Maret 2026</h2><button type="button" id="openingButton">Saldo awal</button></div>
+<div class="section-heading"><h2>Perhitungan sejak Januari 2026</h2><button type="button" id="openingButton">Saldo awal</button></div>
 <p id="openingNotice"></p><p id="openingMismatch" class="warning" hidden></p>
 </section>
 <section id="paymentBalanceSection">
 <div class="section-heading"><h2>Saldo per metode bayar</h2><span>Seluruh periode</span></div>
-<p class="payment-balance-context">Saldo awal + pemasukan sejak Maret 2026 − pengambilan dari sumber dana yang sama.</p>
+<p class="payment-balance-context">Saldo awal + pemasukan sejak Januari 2026 − pengambilan dari sumber dana yang sama.</p>
 <div id="paymentBalances" class="payment-balances"></div>
 <p id="paymentBalanceWarning" class="warning" hidden></p>
 </section>
@@ -537,7 +537,7 @@ body[data-view="withdrawals"] #openingSection{display:none}
     <div class="fields">
       <label class="wide">Saldo yang digunakan<select name="account" id="withdrawAccount" required></select></label>
 <label class="wide">Sumber dana<select name="method" id="withdrawMethod" required><option value="">Pilih sumber dana</option><option>Shopeepay</option><option>BCA</option></select></label>
-      <label>Tanggal<input name="date" id="withdrawDate" type="date" min="2026-03-01" required></label>
+      <label>Tanggal<input name="date" id="withdrawDate" type="date" min="2026-01-01" required></label>
       <label>Jumlah (Rp)<input name="amount" id="withdrawAmount" type="number" min="0.01" max="1000000000000" step="0.01" required></label>
       <label class="wide">Keterangan<textarea name="note" rows="3" maxlength="1000" placeholder="Tujuan atau rincian pengambilan" required></textarea></label>
     </div>
@@ -558,8 +558,8 @@ body[data-view="withdrawals"] #openingSection{display:none}
 
 <dialog id="openingDialog">
 <form id="openingForm">
-<h2>Saldo awal per 28 Februari 2026</h2>
-<p>Isi saldo yang masih tersisa pada akhir Februari. Isi metode bayar sesuai dana yang tersimpan, lalu isi alokasinya ke masing-masing akun. Nilai yang disimpan mengganti saldo awal sebelumnya.</p>
+<h2>Saldo awal per 1 Januari 2026</h2>
+<p>Isi saldo yang masih tersisa pada akhir Desember 2025. Isi metode bayar sesuai dana yang tersimpan, lalu isi alokasinya ke masing-masing akun. Nilai yang disimpan mengganti saldo awal sebelumnya.</p>
 <div id="openingInputs"></div>
 <p id="openingReconciliation"></p><p id="openingError" class="error" role="alert"></p>
 <div class="actions"><button type="button" id="openingCancel">Batal</button><button id="openingSave" class="primary">Simpan saldo awal</button></div>
@@ -578,7 +578,7 @@ body[data-view="withdrawals"] #openingSection{display:none}
 <form id="transaction">
 <h2 id="formTitle">Tambah transaksi</h2><p id="issue" class="warning"></p>
 <div class="fields">
-<label>Tanggal <input name="date" type="date" min="2026-03-01" max="2099-12-31" required></label>
+<label>Tanggal <input name="date" type="date" min="2026-01-01" max="2099-12-31" required></label>
 <label>Nama editor <select name="editor" id="editorSelect" required><option value="">Pilih editor</option></select></label>
 <fieldset class="wide service-fieldset">
 <legend>Jenis jasa <span class="service-hint">Pilih satu atau lebih</span></legend>
@@ -652,7 +652,7 @@ async function load(notice = '') {
   $('saveCost').disabled = true;
   try {
     data = await rpc('readApp');
-    if (!periodValid() || $('period').value < '2026-03') {
+    if (!periodValid() || $('period').value < '2026-01') {
       $('period').value = data.records.map(r => r.period).filter(Boolean).sort().pop() || data.today.slice(0,7);
     }
     updateChoices('editorNames','editor');
@@ -875,7 +875,7 @@ function renderWallets() {
   }
   $('walletOverview').replaceChildren(...[
     ['Saldo awal',total('openingBalance')],
-    ['Pendapatan sejak Maret 2026',total('income')],
+    ['Pendapatan sejak Januari 2026',total('income')],
     ['Total pengambilan',total('withdrawn')],
     ['Saldo tersedia',total('balance')]
   ].map(([label, amount]) => {
@@ -1096,7 +1096,7 @@ function updatePageHeading() {
     ? 'Pendapatan, pengambilan, dan saldo setiap akun · Seluruh periode'
     : currentView === 'withdrawals'
       ? 'Catatan pengambilan dana dan pembatalan · Seluruh periode'
-      : (all ? 'Sejak Maret 2026' : periodText);
+      : (all ? 'Sejak Januari 2026' : periodText);
   $('add').hidden = currentView !== 'transactions';
   $('headerWithdraw').hidden = currentView !== 'withdrawals';
   $('headerWithdraw').disabled = $('withdraw').disabled;
@@ -1142,7 +1142,7 @@ function renderDashboardSummary(revenue, totalFee, profit) {
   const balance = round(accounts.reduce((sum, account) => sum + account.balance,0));
   const cards = [
     ['Total omzet',revenue,all ? 'Seluruh transaksi tercatat' : comparison(revenue,previous.revenue,previous.count > 0)],
-    ['Fee editor / operasional',totalFee,all ? 'Sejak Maret 2026' : comparison(totalFee,previous.fees,previous.count > 0)],
+    ['Fee editor / operasional',totalFee,all ? 'Sejak Januari 2026' : comparison(totalFee,previous.fees,previous.count > 0)],
     ['Sisa hasil usaha',profit,all ? 'Omzet dikurangi fee editor' : comparison(profit,previous.profit,previous.count > 0)],
     ['Saldo alokasi',balance,'Setelah pengambilan · Seluruh periode']
   ];
@@ -1277,7 +1277,7 @@ function renderPaymentBalances() {
     const balance = node('strong',money(account.balance),'payment-balance-value');
     if (account.balance < 0) balance.classList.add('error');
     card.append(balance);
-    for (const [label,value] of [['Saldo awal',account.openingBalance || 0],['Pemasukan sejak Maret 2026',account.income],['Pengambilan',account.withdrawn]]) {
+    for (const [label,value] of [['Saldo awal',account.openingBalance || 0],['Pemasukan sejak Januari 2026',account.income],['Pengambilan',account.withdrawn]]) {
       const row = node('div',undefined,'payment-balance-row');
       row.append(node('span',label),node('strong',money(value)));
       card.append(row);
@@ -1369,8 +1369,8 @@ function openingReconciliation() {
 function renderOpeningNotice() {
   const configured = data.opening?.configured;
   $('openingNotice').textContent = configured
-    ? 'Saldo awal per 28 Februari 2026 + pemasukan sejak 1 Maret 2026 − pengambilan sejak 1 Maret 2026.'
-    : 'Isi saldo tersisa per 28 Februari 2026 melalui Saldo awal. Rekap saat ini menghitung transaksi sejak 1 Maret 2026.';
+    ? 'Saldo awal per 1 Januari 2026 + pemasukan sejak 1 Januari 2026 − pengambilan sejak 1 Januari 2026.'
+    : 'Isi saldo akhir 31 Desember 2025 melalui Saldo awal. Rekap saat ini menghitung transaksi sejak 1 Januari 2026.';
   $('openingNotice').classList.toggle('warning',!configured);
   const balances = data.opening?.balances || {};
   const methods = Number(balances['method:BCA'] || 0) + Number(balances['method:Shopeepay'] || 0);
