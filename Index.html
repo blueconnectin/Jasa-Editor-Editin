@@ -415,6 +415,19 @@ body[data-view="withdrawals"] #paymentBalanceSection{display:none}
 #paymentBalanceWarning{font-size:14px;margin:16px 0}
 #history td:last-child button{margin:3px}
 @media(max-width:600px){.payment-balances{grid-template-columns:minmax(0,1fr)}.payment-balance-card{padding:18px}.payment-balance-value{font-size:27px}}
+
+#openingSection{background:#fff;border:1px solid #c8d5e8;padding:20px;border-radius:13px;margin-bottom:24px}
+#openingSection p{font-size:15px;margin-top:10px}
+body[data-view="withdrawals"] #openingSection{display:none}
+#openingInputs{display:grid;gap:12px;margin:22px 0}
+.opening-field{display:grid;grid-template-columns:minmax(0,1fr) minmax(120px,180px);gap:14px;align-items:center;font-size:16px;padding:10px 0;border-bottom:1px solid #dce4ef}
+.opening-field small{display:block;font-size:13px;font-weight:400;color:#425672;margin-top:4px}
+#openingReconciliation{font-size:14px}
+#walletOverview{grid-template-columns:repeat(4,minmax(0,1fr))}
+.balance-table th:nth-child(5),.balance-table td:nth-child(5){text-align:right;font-variant-numeric:tabular-nums}
+.balance-table td:nth-child(4){font-weight:400;font-size:16px!important}
+@media(max-width:780px){#walletOverview{grid-template-columns:repeat(2,minmax(0,1fr))}.opening-field{grid-template-columns:minmax(0,1fr)}}
+@media(max-width:380px){#walletOverview{grid-template-columns:minmax(0,1fr)}}
 </style>
 </head>
 <body data-view="overview">
@@ -432,7 +445,7 @@ body[data-view="withdrawals"] #paymentBalanceSection{display:none}
 <header><div><h1 id="pageTitle">Ringkasan keuangan</h1><p id="subtitle">Rekap transaksi dan fee bulanan</p></div><button class="primary" id="add" hidden disabled>+ Transaksi</button><button class="primary" id="headerWithdraw" hidden disabled>Catat pengambilan</button></header>
 <div class="tools" id="transactionTools">
 <label>Tampilan <select id="scope"><option value="month">Per bulan</option><option value="all">Semua periode</option></select></label>
-<label id="periodLabel">Periode <input type="month" id="period" min="2000-01" max="2099-12"></label>
+<label id="periodLabel">Periode <input type="month" id="period" min="2026-03" max="2099-12"></label>
 <label class="search">Cari <input id="query" type="search" placeholder="Nama editor, jasa, atau metode bayar"></label>
 <label id="statusFilter">Status bayar <select id="filter"><option value="">Semua status</option><option>Lunas</option><option>Belum bayar</option><option>Belum diketahui</option><option value="review">Perlu ditinjau</option></select></label>
 <button id="reload">Muat ulang</button>
@@ -481,10 +494,14 @@ body[data-view="withdrawals"] #paymentBalanceSection{display:none}
     <div><h2>Saldo & pengambilan</h2><p>Saldo keseluruhan dari pendapatan tercatat dikurangi pengambilan.</p></div>
     <button id="withdraw" class="primary" disabled>Catat pengambilan</button>
   </div>
-  <p class="wallet-notice">Saldo mengikuti seluruh transaksi tercatat, termasuk pembayaran yang statusnya belum diketahui. Koreksi transaksi akan memperbarui saldo.</p>
-  <section id="paymentBalanceSection">
+  <p class="wallet-notice">Saldo mencakup saldo awal dan transaksi sejak 1 Maret 2026. Koreksi transaksi akan memperbarui saldo.</p>
+  <section id="openingSection">
+<div class="section-heading"><h2>Perhitungan sejak Maret 2026</h2><button type="button" id="openingButton">Saldo awal</button></div>
+<p id="openingNotice"></p><p id="openingMismatch" class="warning" hidden></p>
+</section>
+<section id="paymentBalanceSection">
 <div class="section-heading"><h2>Saldo per metode bayar</h2><span>Seluruh periode</span></div>
-<p class="payment-balance-context">Pemasukan transaksi dikurangi pengambilan dari sumber dana yang sama.</p>
+<p class="payment-balance-context">Saldo awal + pemasukan sejak Maret 2026 − pengambilan dari sumber dana yang sama.</p>
 <div id="paymentBalances" class="payment-balances"></div>
 <p id="paymentBalanceWarning" class="warning" hidden></p>
 </section>
@@ -520,7 +537,7 @@ body[data-view="withdrawals"] #paymentBalanceSection{display:none}
     <div class="fields">
       <label class="wide">Saldo yang digunakan<select name="account" id="withdrawAccount" required></select></label>
 <label class="wide">Sumber dana<select name="method" id="withdrawMethod" required><option value="">Pilih sumber dana</option><option>Shopeepay</option><option>BCA</option></select></label>
-      <label>Tanggal<input name="date" id="withdrawDate" type="date" min="2000-01-01" required></label>
+      <label>Tanggal<input name="date" id="withdrawDate" type="date" min="2026-03-01" required></label>
       <label>Jumlah (Rp)<input name="amount" id="withdrawAmount" type="number" min="0.01" max="1000000000000" step="0.01" required></label>
       <label class="wide">Keterangan<textarea name="note" rows="3" maxlength="1000" placeholder="Tujuan atau rincian pengambilan" required></textarea></label>
     </div>
@@ -539,6 +556,15 @@ body[data-view="withdrawals"] #paymentBalanceSection{display:none}
   </form>
 </dialog>
 
+<dialog id="openingDialog">
+<form id="openingForm">
+<h2>Saldo awal per 28 Februari 2026</h2>
+<p>Isi saldo yang masih tersisa pada akhir Februari. Isi metode bayar sesuai dana yang tersimpan, lalu isi alokasinya ke masing-masing akun. Nilai yang disimpan mengganti saldo awal sebelumnya.</p>
+<div id="openingInputs"></div>
+<p id="openingReconciliation"></p><p id="openingError" class="error" role="alert"></p>
+<div class="actions"><button type="button" id="openingCancel">Batal</button><button id="openingSave" class="primary">Simpan saldo awal</button></div>
+</form>
+</dialog>
 <dialog id="methodAssignDialog">
 <form id="methodAssignForm">
 <h2>Lengkapi sumber dana</h2><p id="methodAssignInfo"></p>
@@ -552,7 +578,7 @@ body[data-view="withdrawals"] #paymentBalanceSection{display:none}
 <form id="transaction">
 <h2 id="formTitle">Tambah transaksi</h2><p id="issue" class="warning"></p>
 <div class="fields">
-<label>Tanggal <input name="date" type="date" min="2000-01-01" max="2099-12-31" required></label>
+<label>Tanggal <input name="date" type="date" min="2026-03-01" max="2099-12-31" required></label>
 <label>Nama editor <select name="editor" id="editorSelect" required><option value="">Pilih editor</option></select></label>
 <fieldset class="wide service-fieldset">
 <legend>Jenis jasa <span class="service-hint">Pilih satu atau lebih</span></legend>
@@ -626,7 +652,7 @@ async function load(notice = '') {
   $('saveCost').disabled = true;
   try {
     data = await rpc('readApp');
-    if (!periodValid()) {
+    if (!periodValid() || $('period').value < '2026-03') {
       $('period').value = data.records.map(r => r.period).filter(Boolean).sort().pop() || data.today.slice(0,7);
     }
     updateChoices('editorNames','editor');
@@ -842,13 +868,14 @@ function renderWallets() {
   $('withdraw').disabled = !wallets.some(account => account.balance > 0);
   const groupNames = {business:'Dana usaha',shares:'Bagi hasil',editors:'Fee editor'};
   const grouped = wallets.filter(account => walletCategory(account) === walletGroup);
-  const total = key => round(grouped.reduce((sum, account) => sum + account[key],0));
+  const total = key => round(grouped.reduce((sum, account) => sum + Number(account[key] || 0),0));
   $('walletGroupCaption').textContent = groupNames[walletGroup] + ' · Seluruh periode';
   for (const button of document.querySelectorAll('[data-wallet-group]')) {
     button.setAttribute('aria-pressed',String(button.dataset.walletGroup === walletGroup));
   }
   $('walletOverview').replaceChildren(...[
-    ['Total pendapatan',total('income')],
+    ['Saldo awal',total('openingBalance')],
+    ['Pendapatan sejak Maret 2026',total('income')],
     ['Total pengambilan',total('withdrawn')],
     ['Saldo tersedia',total('balance')]
   ].map(([label, amount]) => {
@@ -865,7 +892,7 @@ function renderWallets() {
   caption.className = 'balance-caption';
   const head = node('thead');
   const headings = node('tr');
-  for (const label of ['Akun','Pendapatan','Diambil','Saldo tersedia','Aksi']) {
+  for (const label of ['Akun','Saldo awal','Pendapatan','Diambil','Saldo tersedia','Aksi']) {
     const th = node('th',label);
     th.scope = 'col';
     headings.append(th);
@@ -883,7 +910,7 @@ function renderWallets() {
     }
     const actions = node('td');
     actions.append(walletActions(account));
-    row.append(name,node('td',money(account.income),'money'),
+    row.append(name,node('td',money(account.openingBalance || 0),'money'),node('td',money(account.income),'money'),
       node('td',money(account.withdrawn),'money'),balance,actions);
     body.append(row);
 
@@ -898,7 +925,9 @@ function renderWallets() {
     income.append(node('span','Pendapatan'),node('strong',money(account.income)));
     const taken = node('div',undefined,'balance-detail-row');
     taken.append(node('span','Diambil'),node('strong',money(account.withdrawn)));
-    details.append(summary,income,taken);
+    const opening = node('div',undefined,'balance-detail-row');
+    opening.append(node('span','Saldo awal'),node('strong',money(account.openingBalance || 0)));
+    details.append(summary,opening,income,taken);
     card.append(details);
     if (account.balance < 0) card.append(node('p','Saldo minus setelah koreksi pendapatan.','error'));
     mobile.append(card);
@@ -910,6 +939,7 @@ function renderWallets() {
   if (!accounts.length) {
     $('wallets').replaceChildren(node('p','Tidak ada akun untuk pencarian ini.','balance-empty'));
   }
+  renderOpeningNotice();
   renderPaymentBalances();
   renderHistory();
   updatePageHeading();
@@ -1066,7 +1096,7 @@ function updatePageHeading() {
     ? 'Pendapatan, pengambilan, dan saldo setiap akun · Seluruh periode'
     : currentView === 'withdrawals'
       ? 'Catatan pengambilan dana dan pembatalan · Seluruh periode'
-      : (all ? 'Seluruh periode' : periodText);
+      : (all ? 'Sejak Maret 2026' : periodText);
   $('add').hidden = currentView !== 'transactions';
   $('headerWithdraw').hidden = currentView !== 'withdrawals';
   $('headerWithdraw').disabled = $('withdraw').disabled;
@@ -1112,7 +1142,7 @@ function renderDashboardSummary(revenue, totalFee, profit) {
   const balance = round(accounts.reduce((sum, account) => sum + account.balance,0));
   const cards = [
     ['Total omzet',revenue,all ? 'Seluruh transaksi tercatat' : comparison(revenue,previous.revenue,previous.count > 0)],
-    ['Fee editor / operasional',totalFee,all ? 'Seluruh periode' : comparison(totalFee,previous.fees,previous.count > 0)],
+    ['Fee editor / operasional',totalFee,all ? 'Sejak Maret 2026' : comparison(totalFee,previous.fees,previous.count > 0)],
     ['Sisa hasil usaha',profit,all ? 'Omzet dikurangi fee editor' : comparison(profit,previous.profit,previous.count > 0)],
     ['Saldo alokasi',balance,'Setelah pengambilan · Seluruh periode']
   ];
@@ -1247,7 +1277,7 @@ function renderPaymentBalances() {
     const balance = node('strong',money(account.balance),'payment-balance-value');
     if (account.balance < 0) balance.classList.add('error');
     card.append(balance);
-    for (const [label,value] of [['Pemasukan',account.income],['Pengambilan',account.withdrawn]]) {
+    for (const [label,value] of [['Saldo awal',account.openingBalance || 0],['Pemasukan sejak Maret 2026',account.income],['Pengambilan',account.withdrawn]]) {
       const row = node('div',undefined,'payment-balance-row');
       row.append(node('span',label),node('strong',money(value)));
       card.append(row);
@@ -1289,6 +1319,88 @@ $('methodAssignForm').onsubmit = async event => {
   }
 };
 $('withdrawMethod').onchange = showAvailable;
+
+let openingVersion = '';
+let openingBusy = false;
+
+function openingAccountList() {
+  return [
+    {id:'method:Shopeepay',name:'Shopeepay',type:'Metode bayar'},
+    {id:'method:BCA',name:'BCA',type:'Metode bayar'},
+    ...(data.wallets || []).map(account => ({id:account.id,name:account.name,type:account.type}))
+  ];
+}
+function openOpeningBalances() {
+  openingVersion = data.opening?.version || '';
+  const balances = data.opening?.balances || {};
+  $('openingInputs').replaceChildren(...openingAccountList().map(account => {
+    const label = node('label',undefined,'opening-field');
+    const title = node('span',account.name);
+    title.append(node('small',account.type));
+    const input = document.createElement('input');
+    input.type = 'number';
+    input.min = '0';
+    input.max = '1000000000000';
+    input.step = '0.01';
+    input.required = true;
+    input.dataset.account = account.id;
+    input.value = balances[account.id] || 0;
+    input.setAttribute('aria-label','Saldo awal ' + account.name + ' ' + account.type);
+    input.oninput = openingReconciliation;
+    label.append(title,input);
+    return label;
+  }));
+  $('openingError').textContent = '';
+  openingReconciliation();
+  $('openingDialog').showModal();
+}
+function openingReconciliation() {
+  const inputs = [...$('openingInputs').querySelectorAll('input')];
+  const sources = inputs.filter(input => input.dataset.account.startsWith('method:'))
+    .reduce((sum,input) => sum + (Number(input.value) || 0),0);
+  const accounts = inputs.filter(input => !input.dataset.account.startsWith('method:'))
+    .reduce((sum,input) => sum + (Number(input.value) || 0),0);
+  const difference = round(sources - accounts);
+  $('openingReconciliation').textContent = 'Saldo metode bayar ' + money(sources) +
+    ' · Total saldo akun ' + money(accounts) +
+    (difference ? ' · Selisih ' + money(difference) : ' · Cocok');
+  $('openingReconciliation').classList.toggle('warning',difference !== 0);
+}
+function renderOpeningNotice() {
+  const configured = data.opening?.configured;
+  $('openingNotice').textContent = configured
+    ? 'Saldo awal per 28 Februari 2026 + pemasukan sejak 1 Maret 2026 − pengambilan sejak 1 Maret 2026.'
+    : 'Isi saldo tersisa per 28 Februari 2026 melalui Saldo awal. Rekap saat ini menghitung transaksi sejak 1 Maret 2026.';
+  $('openingNotice').classList.toggle('warning',!configured);
+  const balances = data.opening?.balances || {};
+  const methods = Number(balances['method:BCA'] || 0) + Number(balances['method:Shopeepay'] || 0);
+  const accounts = Object.entries(balances).filter(([id]) => !id.startsWith('method:'))
+    .reduce((sum,[,amount]) => sum + Number(amount),0);
+  $('openingMismatch').hidden = !configured || round(methods-accounts) === 0;
+  $('openingMismatch').textContent = 'Selisih saldo awal metode bayar dan akun ' + money(round(methods-accounts)) + '. Periksa kembali isian Saldo awal.';
+}
+$('openingButton').onclick = openOpeningBalances;
+$('openingCancel').onclick = () => $('openingDialog').close();
+$('openingDialog').addEventListener('cancel',event => {if (openingBusy) event.preventDefault();});
+$('openingForm').onsubmit = async event => {
+  event.preventDefault();
+  if (openingBusy) return;
+  openingBusy = true;
+  $('openingSave').disabled = $('openingCancel').disabled = true;
+  $('openingError').textContent = '';
+  try {
+    const entries = [...$('openingInputs').querySelectorAll('input')]
+      .map(input => ({id:input.dataset.account,amount:input.value}));
+    await rpc('saveOpeningBalances',{version:openingVersion,entries});
+    $('openingDialog').close();
+    await load('Saldo awal tersimpan. Saldo telah dihitung ulang.');
+  } catch(error) {
+    $('openingError').textContent = error.message || String(error);
+  } finally {
+    openingBusy = false;
+    $('openingSave').disabled = $('openingCancel').disabled = false;
+  }
+};
 
 load();
 </script>
