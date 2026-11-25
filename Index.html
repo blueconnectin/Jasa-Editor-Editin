@@ -429,16 +429,103 @@ body[data-view="withdrawals"] #openingSection{display:none}
 @media(max-width:780px){#walletOverview{grid-template-columns:repeat(2,minmax(0,1fr))}.opening-field{grid-template-columns:minmax(0,1fr)}}
 @media(max-width:380px){#walletOverview{grid-template-columns:minmax(0,1fr)}}
 .delete-transaction{color:#a12e25;border-color:#dfb4b0;margin-left:6px}
+.app-nav .nav-icon{width:21px;height:21px;flex:0 0 21px;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.app-nav button{display:flex;align-items:center;gap:12px}
+.card,.wallet-overview>div,.allocation-label,.available-row,.payment-balance-row,.balance-detail-row{min-width:0}
+.card strong,.wallet-overview strong,.payment-balance-value,.balance-mobile-amount{font-variant-numeric:tabular-nums;overflow-wrap:anywhere}
+@media(max-width:780px){
+ html{scroll-padding-bottom:170px}
+ body{background:#f3f6fc}
+ .sidebar{position:fixed;inset:auto 0 0;width:100%;padding:7px 10px calc(7px + env(safe-area-inset-bottom,0px));background:#fff;border-top:1px solid #ccd8e9;box-shadow:0 -5px 24px #172c4710;z-index:30}
+ .sidebar .brand,.sidebar .sidebar-footer{display:none}
+ .app-nav{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:4px}
+ .app-nav button{display:flex;flex-direction:column;justify-content:center;gap:5px;min-width:0;min-height:58px;padding:7px 2px;font-size:12px;font-weight:600;border-radius:12px;color:#4b5e79}
+ .app-nav button:hover:not(:disabled){background:#edf3ff;color:#244cba}
+ .app-nav button[aria-current="page"],.app-nav button[aria-current="page"]:hover:not(:disabled){background:#e9f0ff;color:#214ac0;box-shadow:none}
+ .app-nav .nav-icon{display:block;width:23px;height:23px;flex:0 0 23px}
+ main{margin:0;padding:22px 16px calc(170px + env(safe-area-inset-bottom,0px));min-width:0}
+ header{display:block;padding:0 0 19px;margin-bottom:20px}
+ h1{font-size:27px;line-height:1.25;overflow-wrap:anywhere}
+ header p{font-size:14px;line-height:1.6;overflow-wrap:anywhere}
+ header #add,header #headerWithdraw{position:fixed;left:16px;right:16px;bottom:calc(87px + env(safe-area-inset-bottom,0px));width:calc(100% - 32px)!important;margin:0;min-height:50px;border-radius:14px;box-shadow:0 6px 20px #1d45b934;z-index:29;font-size:16px}
+ .cards{grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+ .card{padding:17px;border-radius:16px}
+ .card small{font-size:14px;line-height:1.5;display:block}
+ .card strong{font-size:25px;white-space:normal;line-height:1.3;margin:12px 0 10px}
+ .metric-context{font-size:13px;line-height:1.6}
+ .dashboard-grid{gap:16px}
+ .dashboard-panel{padding:18px;border-radius:16px}
+ .dashboard-heading{align-items:flex-start;gap:10px}
+ .dashboard-heading h2{font-size:19px}
+ .dashboard-heading>span{font-size:13px}
+ .allocation-label{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:8px;font-size:14px;align-items:start}
+ .allocation-label strong{text-align:right;white-space:normal;overflow-wrap:anywhere}
+ .available-row,.payment-balance-row,.balance-detail-row{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);align-items:start;gap:10px;line-height:1.6}
+ .available-row strong,.payment-balance-row strong,.balance-detail-row strong{min-width:0;text-align:right;white-space:normal;overflow-wrap:anywhere;font-variant-numeric:tabular-nums}
+ .editor-recap table{table-layout:fixed}
+ .editor-recap td:first-child{width:50%;overflow-wrap:anywhere}
+ .editor-recap td:last-child{width:50%;white-space:normal;overflow-wrap:anywhere;font-variant-numeric:tabular-nums}
+ #walletOverview{grid-template-columns:repeat(2,minmax(0,1fr));padding:20px;gap:20px}
+ #walletOverview>div{padding-left:12px;min-width:0}
+ #walletOverview strong{font-size:25px;line-height:1.35;white-space:normal}
+ .payment-balance-value{font-size:29px;line-height:1.35;white-space:normal}
+ .balance-mobile-amount{font-size:28px;line-height:1.35;white-space:normal}
+ .balance-list-item{border-radius:16px;padding:20px;margin-bottom:14px}
+ .balance-list-item h3{font-size:19px;overflow-wrap:anywhere}
+ .balance-actions{gap:10px;flex-wrap:wrap}
+ .balance-actions button{padding:10px 17px;min-height:44px;font-size:15px}
+ #transactionsPanel>.scroll,.history-panel>.scroll{overflow:visible}
+ #transactionsPanel>.scroll>table,.history-panel>.scroll>table{display:block;min-width:0;width:100%}
+ #transactionsPanel thead,.history-panel thead{display:none}
+ #records,#history{display:grid;gap:14px}
+ #records>tr,#history>tr{display:grid;gap:0;padding:14px;border:1px solid #d4dfed;border-radius:13px;background:#fff}
+ #records>tr:hover,#history>tr:hover{background:#fff}
+ #records>tr>td,#history>tr>td{display:grid;grid-template-columns:minmax(0,.8fr) minmax(0,1.2fr);gap:12px;align-items:start;font-size:15px;padding:10px 0;border:0;min-width:0;white-space:normal;overflow-wrap:anywhere;line-height:1.55}
+ #records>tr>td::before,#history>tr>td::before{content:attr(data-label);font-size:13px;font-weight:550;color:#4b5e79;min-width:0}
+ #records td.service,#history td.service{min-width:0}
+ #records td small,#history td small{grid-column:2;font-size:13px;margin-top:-6px}
+ #records td:last-child,#history td:last-child{display:flex;flex-wrap:wrap;gap:8px;border-top:1px solid #e0e7f1;padding-top:13px;margin-top:5px}
+ #records td:last-child::before,#history td:last-child::before{display:none}
+ #records td button,#history td button{font-size:15px;min-height:44px;padding:9px 14px;margin:0}
+ .recent-table{table-layout:fixed}
+ .recent-table th:first-child{width:26%}
+ .recent-table th:nth-child(2){width:34%}
+ .recent-table th:last-child{width:40%}
+ .recent-table td{overflow-wrap:anywhere;white-space:normal;font-size:14px;vertical-align:top}
+ .recent-table th{font-size:13px;white-space:normal}
+ .recent-table td.money{white-space:normal;overflow-wrap:anywhere}
+ dialog{width:calc(100vw - 20px);max-width:calc(100vw - 20px);padding:19px;max-height:calc(100dvh - 20px);border-radius:19px}
+ dialog .fields{grid-template-columns:minmax(0,1fr)}
+ dialog .actions{position:sticky;bottom:-19px;background:#fff;padding:15px 0 calc(12px + env(safe-area-inset-bottom,0px));z-index:1;display:grid;grid-template-columns:repeat(2,minmax(0,1fr))}
+ dialog .actions button{white-space:normal;min-height:46px;font-size:15px;padding:10px 8px}
+ .opening-field{grid-template-columns:minmax(0,1fr)}
+ .opening-field input{width:100%;min-width:0}
+ .service-choices{grid-template-columns:minmax(0,1fr)}
+ .trend-layout{grid-template-columns:50px minmax(0,1fr)}
+ .trend-group{gap:3px}
+}
+@media(max-width:430px){
+ .cards{grid-template-columns:minmax(0,1fr)}
+ .card{display:grid;grid-template-columns:minmax(0,1fr);gap:0}
+ .card strong{font-size:30px}
+ #walletOverview{grid-template-columns:minmax(0,1fr)}
+ .allocation-label{grid-template-columns:minmax(0,1fr)}
+ .allocation-label strong{text-align:left;font-size:16px}
+ #transactionTools{grid-template-columns:repeat(2,minmax(0,1fr))}
+ #transactionTools .search{grid-column:1/-1}
+ .app-nav button{font-size:11px}
+}
+
 </style>
 </head>
 <body data-view="overview">
 <aside class="sidebar">
   <div class="brand"><strong>Editin</strong><span>Keuangan jasa editor</span></div>
   <nav class="app-nav" aria-label="Menu utama">
-    <button type="button" data-page="overview" aria-current="page">Ringkasan</button>
-    <button type="button" data-page="transactions">Transaksi</button>
-    <button type="button" data-page="balances">Saldo</button>
-    <button type="button" data-page="withdrawals">Pengambilan</button>
+    <button type="button" data-page="overview" aria-current="page"><svg class="nav-icon" viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg><span>Ringkasan</span></button>
+    <button type="button" data-page="transactions"><svg class="nav-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 3h12v18l-3-2-3 2-3-2-3 2z"/><path d="M9 7h6M9 11h6M9 15h3"/></svg><span>Transaksi</span></button>
+    <button type="button" data-page="balances"><svg class="nav-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7V5a2 2 0 0 1 2-2h12v4"/><rect x="3" y="7" width="18" height="14" rx="2"/><path d="M21 12h-6v5h6M17 14.5h.1"/></svg><span>Saldo</span></button>
+    <button type="button" data-page="withdrawals"><svg class="nav-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 15V3m-4 4 4-4 4 4M5 13v6a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-6"/></svg><span>Pengambilan</span></button>
   </nav>
   <div class="sidebar-footer">Pendapatan Editor</div>
 </aside>
@@ -744,6 +831,9 @@ function render(resetCost = false) {
     const commission = fee(r);
     row.append(date,node('td',r.editor),service,node('td',money(r.price),'money'),
       node('td',commission === null ? 'Perlu tarif' : money(commission) + ' · ' + r.rate + '%','money'),payment,action);
+    [...row.children].forEach((cell,index) => {
+      cell.dataset.label = ['Tanggal','Editor','Jasa','Harga','Biaya jasa','Metode bayar','Aksi'][index];
+    });
     return row;
   }));
 }
@@ -998,6 +1088,9 @@ function renderHistory() {
       node('td',entry.method || 'Belum diisi'),
       node('td',money(entry.amount),'money'),description,
       node('td',entry.cancelled ? 'Dibatalkan' : 'Aktif'),action);
+    [...row.children].forEach((cell,index) => {
+      cell.dataset.label = ['Tanggal','Akun','Sumber dana','Jumlah','Keterangan','Status','Aksi'][index];
+    });
     return row;
   }));
 }
