@@ -133,7 +133,21 @@ function readApp() {
       rate: row[6], method: row[7], status: row[8], note: row[9], issue: row[10],
       source: row[11], version: row[12]
     }));
-    const editors = rows_(sheet_(tx.getParent(), 'Daftar Editor', ['Nama Editor']), 1)
+    const editorSheet = sheet_(tx.getParent(), 'Daftar Editor', ['Nama Editor']);
+    const properties = PropertiesService.getScriptProperties();
+    const editorMigration = 'EDITOR_ANIISAH_FIDAARIYAH_V1';
+    if (!properties.getProperty(editorMigration)) {
+      const editorName = 'Aniisah Fidaariyah';
+      const exists = rows_(editorSheet, 1).some(row =>
+        String(row[0]).trim().toLowerCase() === editorName.toLowerCase()
+      );
+      if (!exists) {
+        editorSheet.getRange(editorSheet.getLastRow() + 1, 1).setValue(editorName);
+        SpreadsheetApp.flush();
+      }
+      properties.setProperty(editorMigration, 'done');
+    }
+    const editors = rows_(editorSheet, 1)
       .map(row => String(row[0]).trim()).filter(Boolean);
     const withdrawals = migrationWithdrawals_(withdrawals_(withdrawalSheet_(tx.getParent())));
     const opening = openingBalances_(tx.getParent());
