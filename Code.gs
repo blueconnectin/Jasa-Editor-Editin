@@ -222,7 +222,7 @@ const WITHDRAWAL_HEADERS = [
 ];
 const ALLOCATION_ACCOUNTS = [
   ['Investasi', 3], ['Dana darurat', 3], ['Iklan', 10],
-  ['Infaq', 2], ['Mumu', 41], ['Hilmi', 10], ['Gina', 31]
+  ['Infaq', 2], ['Mumu', 43], ['Hilmi', 10], ['Gina', 29]
 ];
 
 function cents_(amount) {
