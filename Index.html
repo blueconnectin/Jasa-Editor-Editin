@@ -711,9 +711,9 @@ function render(resetCost = false) {
   const allocations = [['Investasi (3%)',3],['Dana darurat (3%)',3],['Iklan (10%)',10],['Infaq (2%)',2]]
     .map(([name,percent]) => [name,round(basis * percent / 100)]);
   const share = round(basis - allocations.reduce((total,item) => total + item[1],0));
-  const members = [['Mumu (41%)',41],['Hilmi (10%)',10]]
+  const members = [['Mumu (43%)',43],['Hilmi (10%)',10]]
     .map(([name,percent]) => [name,round(basis * percent / 100)]);
-  members.push(['Gina (31%)',round(share - members.reduce((total,item) => total + item[1],0))]);
+  members.push(['Gina (29%)',round(share - members.reduce((total,item) => total + item[1],0))]);
   addAmounts($('allocation'),[...allocations,['Bagi hasil',share],...members]);
   $('allocation-note').textContent = 'Persentase dihitung dari sisa hasil usaha positif.';
   $('cost').disabled = !periodValid();
@@ -1159,7 +1159,7 @@ function renderDashboardSummary(revenue, totalFee, profit) {
     return card;
   }));
   const basis = Math.max(profit,0);
-  const definitions = [['Mumu',41],['Gina',31],['Hilmi',10],['Iklan',10],['Investasi',3],['Dana darurat',3],['Infaq',2]];
+  const definitions = [['Mumu',43],['Gina',29],['Hilmi',10],['Iklan',10],['Investasi',3],['Dana darurat',3],['Infaq',2]];
   // Gunakan hasil pembulatan yang sama dengan rekap alokasi sebelumnya.
   const allocated = new Map();
   for (const [name,percent] of definitions) allocated.set(name,round(basis * percent / 100));
